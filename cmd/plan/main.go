@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/bmeg/lathe/plans"
 	"github.com/bmeg/sifter/playbook"
 	"github.com/bmeg/sifter/task"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ type Step struct {
 	Command string
 	Inputs  []string
 	Outputs []string
+	Workdir string
 }
 
 var snakeFile string = `
@@ -43,7 +45,7 @@ rule {{.Name}}:
 {{- end}}
 {{- if .Command }}
 	shell:
-		"{{.Command}}"
+		"{{if .Workdir}}cd {{.Workdir}} && {{end}}{{.Command}}"
 {{- end}}
 {{end}}
 
@@ -72,6 +74,8 @@ func uniqueName(name string, used []string) string {
 	return name
 }
 
+var changeDir = ""
+
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
 	Use:   "plan",
@@ -80,6 +84,11 @@ var Cmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		baseDir, _ := filepath.Abs(args[0])
+		startDir := baseDir
+
+		if changeDir != "" {
+			baseDir, _ = filepath.Abs(changeDir)
+		}
 
 		userInputs := map[string]any{}
 
@@ -87,20 +96,20 @@ var Cmd = &cobra.Command{
 
 		names := []string{}
 
-		filepath.Walk(baseDir,
+		filepath.Walk(startDir,
 			func(path string, info fs.FileInfo, err error) error {
 				if strings.HasSuffix(path, ".yaml") {
-					log.Printf("Checking %s\n", path)
+					//log.Printf("Checking %s\n", path)
 
 					pb := playbook.Playbook{}
-					if err := playbook.ParseFile(path, &pb); err == nil {
+					if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
 
 						if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
 							localInputs := pb.PrepConfig(userInputs, baseDir)
 							task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
 
-							log.Printf("pb outdir %s", task.OutDir())
+							//log.Printf("pb outdir %s", task.OutDir())
 
 							taskInputs, _ := pb.GetConfig(task)
 
@@ -134,7 +143,33 @@ var Cmd = &cobra.Command{
 							})
 						}
 					} else {
-						log.Printf("Skipping %s : %s\n", path, err)
+						pl := plans.Plan{}
+						if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+							for _, sc := range pl.GetScripts() {
+								inputs := []string{}
+								outputs := []string{}
+								scriptInputs := sc.GetInputs()
+								for _, v := range scriptInputs {
+									inputs = append(inputs, v)
+								}
+
+								scriptOutputs := sc.GetOutputs()
+								for _, v := range scriptOutputs {
+									outputs = append(outputs, v)
+								}
+								sName := uniqueName(pb.Name, names)
+								names = append(names, sName)
+								steps = append(steps, Step{
+									Name:    sName,
+									Command: sc.GetCommand(),
+									Inputs:  inputs,
+									Outputs: outputs,
+									Workdir: sc.GetWorkdir(),
+								})
+							}
+						} else {
+							log.Printf("Skipping %s : %s\n", path, sifterErr)
+						}
 					}
 				}
 				return nil
@@ -180,6 +215,11 @@ var Cmd = &cobra.Command{
 					steps[i].Outputs[j] = k
 				}
 			}
+			if steps[i].Workdir != "" {
+				if k, err := filepath.Rel(baseDir, steps[i].Workdir); err == nil {
+					steps[i].Workdir = k
+				}
+			}
 		}
 
 		tmpl, err := template.New("snakefile").Parse(snakeFile)
@@ -194,5 +234,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	//flags := Cmd.Flags()
+	flags := Cmd.Flags()
+	flags.StringVarP(&changeDir, "dir", "C", changeDir, "Change Directory for script base")
 }

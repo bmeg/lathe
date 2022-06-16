@@ -2,31 +2,31 @@ package plans
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"sort"
-	"strings"
-
-	"github.com/bmeg/sifter/task"
-	"github.com/google/shlex"
 )
 
 type Script struct {
+	Class       string   `json:"class"`
 	CommandLine string   `json:"commandLine"`
 	Inputs      []string `json:"inputs"`
 	Outputs     []string `json:"outputs"`
 	Workdir     string   `json:"workdir"`
 	Order       int      `json:"order"`
+	path        string
+	name        string
 }
 
 type Plan struct {
-	Name    string            `json:"name"`
-	Scripts map[string]Script `json:"scripts"`
+	Name    string             `json:"name"`
+	Scripts map[string]*Script `json:"scripts"`
 	path    string
 }
 
+func (pl *Plan) GetScripts() map[string]*Script {
+	return pl.Scripts
+}
+
+/*
 func (pl *Plan) Execute() error {
 	scripts := []string{}
 	for k := range pl.Scripts {
@@ -63,31 +63,35 @@ func (pl *Plan) RunScript(name string) error {
 	}
 	return fmt.Errorf("Script %s not found", name)
 }
+*/
 
-func (pb *Plan) GetScriptInputs(task task.RuntimeTask) map[string][]string {
-	out := map[string][]string{}
-	for k, v := range pb.Scripts {
-		o := []string{}
-		for _, p := range v.Inputs {
-			path := filepath.Join(filepath.Dir(pb.path), p)
-			npath, _ := filepath.Abs(path)
-			o = append(o, npath)
-		}
-		out[k] = o
-	}
-	return out
+func (sc *Script) GetCommand() string {
+	return sc.CommandLine
 }
 
-func (pb *Plan) GetScriptOutputs(task task.RuntimeTask) map[string][]string {
-	out := map[string][]string{}
-	for k, v := range pb.Scripts {
-		o := []string{}
-		for _, p := range v.Outputs {
-			path := filepath.Join(filepath.Dir(pb.path), p)
-			npath, _ := filepath.Abs(path)
-			o = append(o, npath)
-		}
-		out[k] = o
+func (sc *Script) GetInputs() []string {
+	o := []string{}
+	for _, p := range sc.Inputs {
+		path := filepath.Join(filepath.Dir(sc.path), p)
+		npath, _ := filepath.Abs(path)
+		o = append(o, npath)
 	}
-	return out
+	return o
+}
+
+func (sc *Script) GetOutputs() []string {
+
+	o := []string{}
+	for _, p := range sc.Outputs {
+		path := filepath.Join(filepath.Dir(sc.path), p)
+		npath, _ := filepath.Abs(path)
+		fmt.Printf("output: %s\n", npath)
+		o = append(o, npath)
+	}
+	return o
+}
+
+func (sc *Script) GetWorkdir() string {
+	f, _ := filepath.Abs(sc.path)
+	return filepath.Dir(f)
 }

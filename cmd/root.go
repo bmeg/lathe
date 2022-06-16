@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/bmeg/lathe/cmd/build"
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
 
@@ -19,6 +20,7 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(plan.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
+	RootCmd.AddCommand(build.Cmd)
 }
 
 var genBashCompletionCmd = &cobra.Command{

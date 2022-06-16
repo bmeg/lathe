@@ -3,6 +3,12 @@ module github.com/bmeg/lathe
 go 1.18
 
 require (
+	github.com/bmeg/sifter v0.0.0-20220615235806-b6451be44313
+	github.com/spf13/cobra v1.4.0
+	sigs.k8s.io/yaml v1.3.0
+)
+
+require (
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
@@ -12,7 +18,6 @@ require (
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 // indirect
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 // indirect
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
-	github.com/bmeg/sifter v0.0.0-20220518162325-8d45c1756bdc // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cockroachdb/errors v1.8.1 // indirect
@@ -30,7 +35,6 @@ require (
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
@@ -50,13 +54,13 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20190428105938-cea283e61946 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-sqlite3 v1.9.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/ksuid v1.0.2 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
-	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
@@ -70,5 +74,4 @@ require (
 	google.golang.org/grpc v1.38.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )
