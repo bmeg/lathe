@@ -6,7 +6,6 @@ import (
 )
 
 type Script struct {
-	Class       string   `json:"class"`
 	CommandLine string   `json:"commandLine"`
 	Inputs      []string `json:"inputs"`
 	Outputs     []string `json:"outputs"`
@@ -17,6 +16,7 @@ type Script struct {
 }
 
 type Plan struct {
+	Class   string             `json:"class"`
 	Name    string             `json:"name"`
 	Scripts map[string]*Script `json:"scripts"`
 	path    string

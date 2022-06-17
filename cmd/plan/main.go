@@ -3,6 +3,7 @@ package plan
 import (
 	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/bmeg/sifter/playbook"
 	"github.com/bmeg/sifter/task"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 )
 
 type Step struct {
@@ -84,10 +86,11 @@ var Cmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		baseDir, _ := filepath.Abs(args[0])
-		startDir := baseDir
 
 		if changeDir != "" {
 			baseDir, _ = filepath.Abs(changeDir)
+		} else if len(args) > 1 {
+			return fmt.Errorf("For multiple input directories, based dir must be defined")
 		}
 
 		userInputs := map[string]any{}
@@ -96,84 +99,99 @@ var Cmd = &cobra.Command{
 
 		names := []string{}
 
-		filepath.Walk(startDir,
-			func(path string, info fs.FileInfo, err error) error {
-				if strings.HasSuffix(path, ".yaml") {
-					//log.Printf("Checking %s\n", path)
+		for _, dir := range args {
+			startDir, _ := filepath.Abs(dir)
+			filepath.Walk(startDir,
+				func(path string, info fs.FileInfo, err error) error {
+					if strings.HasSuffix(path, ".yaml") {
+						//log.Printf("Checking %s\n", path)
 
-					pb := playbook.Playbook{}
-					if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
+						pb := playbook.Playbook{}
+						if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
 
-						if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
+							if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
-							localInputs := pb.PrepConfig(userInputs, baseDir)
-							task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
+								localInputs := pb.PrepConfig(userInputs, baseDir)
+								task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
 
-							//log.Printf("pb outdir %s", task.OutDir())
+								//log.Printf("pb outdir %s", task.OutDir())
 
-							taskInputs, _ := pb.GetConfig(task)
+								taskInputs, _ := pb.GetConfig(task)
 
-							inputs := []string{}
-							outputs := []string{}
-							for _, p := range taskInputs {
-								inputs = append(inputs, p)
-							}
-
-							sinks, _ := pb.GetOutputs(task)
-							for _, v := range sinks {
-								for _, p := range v {
-									outputs = append(outputs, p)
-								}
-							}
-
-							emitters, _ := pb.GetEmitters(task)
-							for _, v := range emitters {
-								outputs = append(outputs, v)
-							}
-
-							cmdPath, _ := filepath.Rel(baseDir, path)
-
-							sName := uniqueName(pb.Name, names)
-							names = append(names, sName)
-							steps = append(steps, Step{
-								Name:    sName,
-								Command: fmt.Sprintf("sifter run %s", cmdPath),
-								Inputs:  inputs,
-								Outputs: outputs,
-							})
-						}
-					} else {
-						pl := plans.Plan{}
-						if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
-							for _, sc := range pl.GetScripts() {
 								inputs := []string{}
 								outputs := []string{}
-								scriptInputs := sc.GetInputs()
-								for _, v := range scriptInputs {
-									inputs = append(inputs, v)
+								for _, p := range taskInputs {
+									inputs = append(inputs, p)
 								}
 
-								scriptOutputs := sc.GetOutputs()
-								for _, v := range scriptOutputs {
+								sinks, _ := pb.GetOutputs(task)
+								for _, v := range sinks {
+									for _, p := range v {
+										outputs = append(outputs, p)
+									}
+								}
+
+								emitters, _ := pb.GetEmitters(task)
+								for _, v := range emitters {
 									outputs = append(outputs, v)
 								}
+
+								cmdPath, _ := filepath.Rel(baseDir, path)
+
 								sName := uniqueName(pb.Name, names)
 								names = append(names, sName)
 								steps = append(steps, Step{
 									Name:    sName,
-									Command: sc.GetCommand(),
+									Command: fmt.Sprintf("sifter run %s", cmdPath),
 									Inputs:  inputs,
 									Outputs: outputs,
-									Workdir: sc.GetWorkdir(),
 								})
 							}
 						} else {
-							log.Printf("Skipping %s : %s\n", path, sifterErr)
+							pl := plans.Plan{}
+							if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+								for _, sc := range pl.GetScripts() {
+									inputs := []string{}
+									outputs := []string{}
+									scriptInputs := sc.GetInputs()
+									for _, v := range scriptInputs {
+										inputs = append(inputs, v)
+									}
+
+									scriptOutputs := sc.GetOutputs()
+									for _, v := range scriptOutputs {
+										outputs = append(outputs, v)
+									}
+									sName := uniqueName(pb.Name, names)
+									names = append(names, sName)
+									steps = append(steps, Step{
+										Name:    sName,
+										Command: sc.GetCommand(),
+										Inputs:  inputs,
+										Outputs: outputs,
+										Workdir: sc.GetWorkdir(),
+									})
+								}
+							} else {
+								source, _ := ioutil.ReadFile(path)
+								d := map[string]any{}
+								yaml.Unmarshal(source, &d)
+								if cl, ok := d["class"]; ok {
+									if cls, ok := cl.(string); ok {
+										if cls == "lathe" {
+											log.Printf("Skipping lathe %s : %s\n", path, latheErr)
+										}
+										if cls == "sifter" {
+											log.Printf("Skipping sifter %s : %s\n", path, sifterErr)
+										}
+									}
+								}
+							}
 						}
 					}
-				}
-				return nil
-			})
+					return nil
+				})
+		}
 
 		//find all final outputs
 		outputs := map[string]int{}
