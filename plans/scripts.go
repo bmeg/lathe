@@ -2,7 +2,13 @@ package plans
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/google/shlex"
 )
 
 type Script struct {
@@ -15,10 +21,16 @@ type Script struct {
 	name        string
 }
 
+type PrepStage struct {
+	IfMissing   string `json:"ifMissing"`
+	CommandLine string `json:"commandLine"`
+}
+
 type Plan struct {
 	Class   string             `json:"class"`
 	Name    string             `json:"name"`
 	Scripts map[string]*Script `json:"scripts"`
+	Prep    []PrepStage        `json:"prep"`
 	path    string
 }
 
@@ -26,44 +38,48 @@ func (pl *Plan) GetScripts() map[string]*Script {
 	return pl.Scripts
 }
 
-/*
-func (pl *Plan) Execute() error {
-	scripts := []string{}
-	for k := range pl.Scripts {
-		scripts = append(scripts, k)
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
 	}
+	return true
+}
 
-	sort.Slice(scripts, func(x, y int) bool { return pl.Scripts[scripts[x]].Order < pl.Scripts[scripts[y]].Order })
-
-	for _, s := range scripts {
+func (pl *Plan) DoPrep() error {
+	planPath, _ := filepath.Abs(pl.path)
+	planDir := filepath.Dir(planPath)
+	for _, s := range pl.Prep {
 		log.Printf("Running script %s", s)
-		err := pl.RunScript(s)
-		if err != nil {
-			log.Printf("Scripting error: %s", err)
-			return err
+
+		if s.IfMissing == "" || !exists(filepath.Join(planDir, s.IfMissing)) {
+			err := pl.runScript(s.CommandLine)
+			if err != nil {
+				log.Printf("Scripting error: %s", err)
+				return err
+			}
+		} else {
+			log.Printf("Skipping prep because file %s exists", s.IfMissing)
 		}
 	}
 	return nil
+
 }
 
-func (pl *Plan) RunScript(name string) error {
-	if sc, ok := pl.Scripts[name]; ok {
-		path, _ := filepath.Abs(pl.path)
-		workdir := filepath.Join(filepath.Dir(path), sc.Workdir)
-		cmdLine, err := shlex.Split(sc.CommandLine)
-		if err != nil {
-			return err
-		}
-		cmd := exec.Command(cmdLine[0], cmdLine[1:len(cmdLine)]...)
-		cmd.Dir = workdir
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-		log.Printf("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
-		return cmd.Run()
+func (pl *Plan) runScript(command string) error {
+	planPath, _ := filepath.Abs(pl.path)
+	workdir := filepath.Dir(planPath)
+	cmdLine, err := shlex.Split(command)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("Script %s not found", name)
+	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
+	cmd.Dir = workdir
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	log.Printf("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
+	return cmd.Run()
 }
-*/
 
 func (sc *Script) GetCommand() string {
 	return sc.CommandLine

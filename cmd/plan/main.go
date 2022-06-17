@@ -77,6 +77,7 @@ func uniqueName(name string, used []string) string {
 }
 
 var changeDir = ""
+var doPrep = false
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
@@ -150,6 +151,14 @@ var Cmd = &cobra.Command{
 						} else {
 							pl := plans.Plan{}
 							if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+
+								if doPrep {
+									if err := pl.DoPrep(); err != nil {
+										log.Panicf("Prep Error: %s\n", err)
+										return err
+									}
+								}
+
 								for _, sc := range pl.GetScripts() {
 									inputs := []string{}
 									outputs := []string{}
@@ -254,4 +263,5 @@ var Cmd = &cobra.Command{
 func init() {
 	flags := Cmd.Flags()
 	flags.StringVarP(&changeDir, "dir", "C", changeDir, "Change Directory for script base")
+	flags.BoolVarP(&doPrep, "prep", "p", doPrep, "Run prep scripts")
 }
