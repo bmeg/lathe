@@ -136,18 +136,11 @@ func (pl *Plan) GenerateScripts() map[string]*Script {
 				for i := range v.Inputs {
 					p, _ := raymond.Render(v.Inputs[i], inputs)
 					o.Inputs[i] = p
-					//path := filepath.Join(filepath.Dir(pl.path), p)
-					//npath, _ := filepath.Abs(path)
-					//o.Inputs[i] = npath
 				}
 				o.Outputs = make([]string, len(v.Outputs))
 				for i := range v.Outputs {
 					p, _ := raymond.Render(v.Outputs[i], inputs)
 					o.Outputs[i] = p
-					//path := filepath.Join(filepath.Dir(pl.path), p)
-					//npath, _ := filepath.Abs(path)
-					//o.Outputs[i] = npath
-					//fmt.Printf("output format: %s %s\n", pl.path, npath)
 				}
 				name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
 				out[name] = &o
