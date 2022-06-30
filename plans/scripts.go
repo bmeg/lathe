@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aymerick/raymond"
 	"github.com/google/shlex"
 )
 
@@ -26,16 +27,26 @@ type PrepStage struct {
 	CommandLine string `json:"commandLine"`
 }
 
-type Plan struct {
-	Class   string             `json:"class"`
-	Name    string             `json:"name"`
+type Template struct {
+	Inputs  []map[string]any   `json:"inputs"`
 	Scripts map[string]*Script `json:"scripts"`
-	Prep    []PrepStage        `json:"prep"`
-	path    string
+}
+
+type Plan struct {
+	Class     string               `json:"class"`
+	Name      string               `json:"name"`
+	Scripts   map[string]*Script   `json:"scripts"`
+	Templates map[string]*Template `json:"templates"`
+	Prep      []PrepStage          `json:"prep"`
+	path      string
 }
 
 func (pl *Plan) GetScripts() map[string]*Script {
-	return pl.Scripts
+	out := pl.GenerateScripts()
+	for k, v := range pl.Scripts {
+		out[k] = v
+	}
+	return out
 }
 
 func exists(filename string) bool {
@@ -110,4 +121,38 @@ func (sc *Script) GetOutputs() []string {
 func (sc *Script) GetWorkdir() string {
 	f, _ := filepath.Abs(sc.path)
 	return filepath.Dir(f)
+}
+
+func (pl *Plan) GenerateScripts() map[string]*Script {
+	out := map[string]*Script{}
+	for tName, t := range pl.Templates {
+		for num, inputs := range t.Inputs {
+			for k, v := range t.Scripts {
+				o := Script{}
+				o.name = v.name
+				o.path = v.path
+				o.CommandLine, _ = raymond.Render(v.CommandLine, inputs)
+				o.Inputs = make([]string, len(v.Inputs))
+				for i := range v.Inputs {
+					p, _ := raymond.Render(v.Inputs[i], inputs)
+					o.Inputs[i] = p
+					//path := filepath.Join(filepath.Dir(pl.path), p)
+					//npath, _ := filepath.Abs(path)
+					//o.Inputs[i] = npath
+				}
+				o.Outputs = make([]string, len(v.Outputs))
+				for i := range v.Outputs {
+					p, _ := raymond.Render(v.Outputs[i], inputs)
+					o.Outputs[i] = p
+					//path := filepath.Join(filepath.Dir(pl.path), p)
+					//npath, _ := filepath.Abs(path)
+					//o.Outputs[i] = npath
+					//fmt.Printf("output format: %s %s\n", pl.path, npath)
+				}
+				name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
+				out[name] = &o
+			}
+		}
+	}
+	return out
 }
