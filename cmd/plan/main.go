@@ -23,6 +23,7 @@ type Step struct {
 	Inputs  []string
 	Outputs []string
 	Workdir string
+	MemMB   int
 }
 
 var snakeFile string = `
@@ -44,6 +45,10 @@ rule {{.Name}}:
 		{{ end -}}
 		"{{- $file -}}"
 		{{- end}}
+{{- end}}
+{{- if .MemMB }}
+	resources:
+		mem_mb={{ .MemMB }}
 {{- end}}
 {{- if .Command }}
 	shell:
@@ -179,6 +184,7 @@ var Cmd = &cobra.Command{
 										Inputs:  inputs,
 										Outputs: outputs,
 										Workdir: sc.GetWorkdir(),
+										MemMB:   sc.MemMB,
 									})
 								}
 							} else {

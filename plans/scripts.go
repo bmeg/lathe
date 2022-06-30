@@ -18,6 +18,7 @@ type Script struct {
 	Outputs     []string `json:"outputs"`
 	Workdir     string   `json:"workdir"`
 	Order       int      `json:"order"`
+	MemMB       int      `json:"memMB"`
 	path        string
 	name        string
 }
@@ -129,8 +130,10 @@ func (pl *Plan) GenerateScripts() map[string]*Script {
 		for num, inputs := range t.Inputs {
 			for k, v := range t.Scripts {
 				o := Script{}
-				o.name = v.name
+				name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
+				o.name = name
 				o.path = v.path
+				o.MemMB = v.MemMB
 				o.CommandLine, _ = raymond.Render(v.CommandLine, inputs)
 				o.Inputs = make([]string, len(v.Inputs))
 				for i := range v.Inputs {
@@ -142,7 +145,6 @@ func (pl *Plan) GenerateScripts() map[string]*Script {
 					p, _ := raymond.Render(v.Outputs[i], inputs)
 					o.Outputs[i] = p
 				}
-				name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
 				out[name] = &o
 			}
 		}
