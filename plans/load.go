@@ -45,12 +45,5 @@ func ParseFile(relpath string, conf *Plan) error {
 		v.path = path
 	}
 
-	for _, t := range conf.Templates {
-		for k, v := range t.Scripts {
-			v.name = k
-			v.path = path
-		}
-	}
-
 	return nil
 }

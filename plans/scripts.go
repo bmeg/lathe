@@ -1,6 +1,7 @@
 package plans
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -8,7 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aymerick/raymond"
+	"github.com/bmeg/goatee"
+
 	"github.com/google/shlex"
 )
 
@@ -29,8 +31,8 @@ type PrepStage struct {
 }
 
 type Template struct {
-	Inputs  []map[string]any   `json:"inputs"`
-	Scripts map[string]*Script `json:"scripts"`
+	Inputs  []map[string]any `json:"inputs"`
+	Scripts map[string]any   `json:"scripts"`
 }
 
 type Plan struct {
@@ -126,28 +128,53 @@ func (sc *Script) GetWorkdir() string {
 
 func (pl *Plan) GenerateScripts() map[string]*Script {
 	out := map[string]*Script{}
+
 	for tName, t := range pl.Templates {
-		for num, inputs := range t.Inputs {
-			for k, v := range t.Scripts {
-				o := Script{}
-				name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
-				o.name = name
-				o.path = v.path
-				o.MemMB = v.MemMB
-				o.CommandLine, _ = raymond.Render(v.CommandLine, inputs)
-				o.Inputs = make([]string, len(v.Inputs))
-				for i := range v.Inputs {
-					p, _ := raymond.Render(v.Inputs[i], inputs)
-					o.Inputs[i] = p
+		outRender, err := goatee.Render(t.Scripts, map[string]any{"inputs": t.Inputs})
+		if err == nil {
+			js, _ := json.MarshalIndent(outRender, "", "  ")
+			fmt.Printf("Template Render:\n%s\n", js)
+			outScript := map[string]*Script{}
+			err := json.Unmarshal(js, &outScript)
+			if err == nil {
+				for k, v := range outScript {
+					name := fmt.Sprintf("%s_%s_%s", pl.Name, tName, k)
+					v.path = pl.path
+					fmt.Printf("step %s = %#v\n", name, v)
+					out[name] = v
 				}
-				o.Outputs = make([]string, len(v.Outputs))
-				for i := range v.Outputs {
-					p, _ := raymond.Render(v.Outputs[i], inputs)
-					o.Outputs[i] = p
-				}
-				out[name] = &o
+			} else {
+				fmt.Printf("Error: %s\n", err)
 			}
+		} else {
+			fmt.Printf("Error: %s\n", err)
 		}
 	}
+
+	/*
+		for tName, t := range pl.Templates {
+			for num, inputs := range t.Inputs {
+				for k, v := range t.Scripts {
+					o := Script{}
+					name := fmt.Sprintf("%s_%s_%s_%d", pl.Name, tName, k, num)
+					o.name = name
+					o.path = v.path
+					o.MemMB = v.MemMB
+					o.CommandLine, _ = raymond.Render(v.CommandLine, inputs)
+					o.Inputs = make([]string, len(v.Inputs))
+					for i := range v.Inputs {
+						p, _ := raymond.Render(v.Inputs[i], inputs)
+						o.Inputs[i] = p
+					}
+					o.Outputs = make([]string, len(v.Outputs))
+					for i := range v.Outputs {
+						p, _ := raymond.Render(v.Outputs[i], inputs)
+						o.Outputs[i] = p
+					}
+					out[name] = &o
+				}
+			}
+		}
+	*/
 	return out
 }
