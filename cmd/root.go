@@ -6,6 +6,7 @@ import (
 	"github.com/bmeg/lathe/cmd/build"
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
+	"github.com/bmeg/lathe/cmd/plangraph"
 
 	"github.com/spf13/cobra"
 )
@@ -21,6 +22,7 @@ func init() {
 	RootCmd.AddCommand(plan.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
 	RootCmd.AddCommand(build.Cmd)
+	RootCmd.AddCommand(plangraph.Cmd)
 }
 
 var genBashCompletionCmd = &cobra.Command{
