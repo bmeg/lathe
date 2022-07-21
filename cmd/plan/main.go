@@ -83,6 +83,7 @@ func uniqueName(name string, used []string) string {
 
 var changeDir = ""
 var doPrep = false
+var exclude = []string{}
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
@@ -99,6 +100,10 @@ var Cmd = &cobra.Command{
 			return fmt.Errorf("For multiple input directories, based dir must be defined")
 		}
 
+		if len(exclude) > 0 {
+			log.Printf("Excluding %#v", exclude)
+		}
+
 		userInputs := map[string]any{}
 
 		steps := []Step{}
@@ -111,93 +116,102 @@ var Cmd = &cobra.Command{
 				func(path string, info fs.FileInfo, err error) error {
 					if strings.HasSuffix(path, ".yaml") {
 						//log.Printf("Checking %s\n", path)
+						doExclude := false
 
-						pb := playbook.Playbook{}
-						if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
-
-							if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
-
-								localInputs := pb.PrepConfig(userInputs, baseDir)
-								task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
-
-								//log.Printf("pb outdir %s", task.OutDir())
-
-								taskInputs, _ := pb.GetConfig(task)
-
-								inputs := []string{}
-								outputs := []string{}
-								for _, p := range taskInputs {
-									inputs = append(inputs, p)
-								}
-
-								sinks, _ := pb.GetOutputs(task)
-								for _, v := range sinks {
-									for _, p := range v {
-										outputs = append(outputs, p)
-									}
-								}
-
-								emitters, _ := pb.GetEmitters(task)
-								for _, v := range emitters {
-									outputs = append(outputs, v)
-								}
-
-								cmdPath, _ := filepath.Rel(baseDir, path)
-
-								sName := uniqueName(pb.Name, names)
-								names = append(names, sName)
-								steps = append(steps, Step{
-									Name:    sName,
-									Command: fmt.Sprintf("sifter run %s", cmdPath),
-									Inputs:  inputs,
-									Outputs: outputs,
-								})
+						for _, e := range exclude {
+							ePath, _ := filepath.Abs(e)
+							if match, err := filepath.Match(ePath, path); match && err == nil {
+								doExclude = true
 							}
-						} else {
-							pl := plans.Plan{}
-							if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+						}
+						if !doExclude {
+							pb := playbook.Playbook{}
+							if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
 
-								if doPrep {
-									if err := pl.DoPrep(); err != nil {
-										log.Panicf("Prep Error: %s\n", err)
-										return err
-									}
-								}
+								if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
-								for _, sc := range pl.GetScripts() {
+									localInputs := pb.PrepConfig(userInputs, baseDir)
+									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
+
+									//log.Printf("pb outdir %s", task.OutDir())
+
+									taskInputs, _ := pb.GetConfig(task)
+
 									inputs := []string{}
 									outputs := []string{}
-									scriptInputs := sc.GetInputs()
-									for _, v := range scriptInputs {
-										inputs = append(inputs, v)
+									for _, p := range taskInputs {
+										inputs = append(inputs, p)
 									}
 
-									scriptOutputs := sc.GetOutputs()
-									for _, v := range scriptOutputs {
+									sinks, _ := pb.GetOutputs(task)
+									for _, v := range sinks {
+										for _, p := range v {
+											outputs = append(outputs, p)
+										}
+									}
+
+									emitters, _ := pb.GetEmitters(task)
+									for _, v := range emitters {
 										outputs = append(outputs, v)
 									}
+
+									cmdPath, _ := filepath.Rel(baseDir, path)
+
 									sName := uniqueName(pb.Name, names)
 									names = append(names, sName)
 									steps = append(steps, Step{
 										Name:    sName,
-										Command: sc.GetCommand(),
+										Command: fmt.Sprintf("sifter run %s", cmdPath),
 										Inputs:  inputs,
 										Outputs: outputs,
-										Workdir: sc.GetWorkdir(),
-										MemMB:   sc.MemMB,
 									})
 								}
 							} else {
-								source, _ := ioutil.ReadFile(path)
-								d := map[string]any{}
-								yaml.Unmarshal(source, &d)
-								if cl, ok := d["class"]; ok {
-									if cls, ok := cl.(string); ok {
-										if cls == "lathe" {
-											log.Printf("Skipping lathe %s : %s\n", path, latheErr)
+								pl := plans.Plan{}
+								if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+
+									if doPrep {
+										if err := pl.DoPrep(); err != nil {
+											log.Panicf("Prep Error: %s\n", err)
+											return err
 										}
-										if cls == "sifter" {
-											log.Printf("Skipping sifter %s : %s\n", path, sifterErr)
+									}
+
+									for _, sc := range pl.GetScripts() {
+										inputs := []string{}
+										outputs := []string{}
+										scriptInputs := sc.GetInputs()
+										for _, v := range scriptInputs {
+											inputs = append(inputs, v)
+										}
+
+										scriptOutputs := sc.GetOutputs()
+										for _, v := range scriptOutputs {
+											outputs = append(outputs, v)
+										}
+										sName := uniqueName(pb.Name, names)
+										names = append(names, sName)
+										steps = append(steps, Step{
+											Name:    sName,
+											Command: sc.GetCommand(),
+											Inputs:  inputs,
+											Outputs: outputs,
+											Workdir: sc.GetWorkdir(),
+											MemMB:   sc.MemMB,
+										})
+									}
+								} else {
+									source, _ := ioutil.ReadFile(path)
+									d := map[string]any{}
+									yaml.Unmarshal(source, &d)
+									if cl, ok := d["class"]; ok {
+										if cls, ok := cl.(string); ok {
+											if cls == "lathe" {
+												log.Printf("Skipping lathe %s : %s\n", path, latheErr)
+											}
+											if cls == "sifter" {
+												log.Printf("Skipping sifter %s : %s\n", path, sifterErr)
+											}
 										}
 									}
 								}
@@ -270,4 +284,5 @@ func init() {
 	flags := Cmd.Flags()
 	flags.StringVarP(&changeDir, "dir", "C", changeDir, "Change Directory for script base")
 	flags.BoolVarP(&doPrep, "prep", "p", doPrep, "Run prep scripts")
+	flags.StringArrayVarP(&exclude, "exclude", "e", exclude, "Paths to exclude")
 }
