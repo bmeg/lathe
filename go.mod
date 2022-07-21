@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
-	github.com/bmeg/sifter v0.0.0-20220615235806-b6451be44313
+	github.com/bmeg/sifter v0.0.0-20220708191544-6d7c7b6ca1e1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/spf13/cobra v1.4.0
 	sigs.k8s.io/yaml v1.3.0
@@ -15,8 +15,7 @@ require (
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
 	github.com/basgys/goxml2json v1.1.0 // indirect
-	github.com/biogo/hts v1.2.2 // indirect
-	github.com/bmeg/flame v0.0.0-20220315061525-89da71b2c32e // indirect
+	github.com/bmeg/flame v0.0.0-20220629214151-e9f416368cd4 // indirect
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 // indirect
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 // indirect
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
