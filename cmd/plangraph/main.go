@@ -84,7 +84,6 @@ func uniqueName(name string, used []string) string {
 
 var changeDir = ""
 var outDir = "./"
-var doPrep = false
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
@@ -98,7 +97,7 @@ var Cmd = &cobra.Command{
 		if changeDir != "" {
 			baseDir, _ = filepath.Abs(changeDir)
 		} else if len(args) > 1 {
-			return fmt.Errorf("For multiple input directories, based dir must be defined")
+			return fmt.Errorf("for multiple input directories, based dir must be defined")
 		}
 
 		_ = baseDir
@@ -106,7 +105,7 @@ var Cmd = &cobra.Command{
 		outDir, _ := filepath.Abs(outDir)
 		outDir, _ = filepath.Rel(baseDir, outDir)
 
-		userInputs := map[string]any{}
+		userInputs := map[string]string{}
 
 		for _, dir := range args {
 			startDir, _ := filepath.Abs(dir)
@@ -117,51 +116,56 @@ var Cmd = &cobra.Command{
 						if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
 							if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
-								localInputs := pb.PrepConfig(userInputs, baseDir)
-								task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
+								localInputs, err := pb.PrepConfig(userInputs, baseDir)
+								if err == nil {
+									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
 
-								gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: outDir}
+									gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: outDir}
 
-								for pname, p := range pb.Pipelines {
-									emitName := ""
-									for _, s := range p {
-										if s.Emit != nil {
-											emitName = s.Emit.Name
-										}
-									}
-									if emitName != "" {
+									for pname, p := range pb.Pipelines {
+										emitName := ""
 										for _, s := range p {
-											if s.ObjectCreate != nil {
-												schema, _ := evaluate.ExpressionString(s.ObjectCreate.Schema, task.GetConfig(), map[string]any{})
-												outdir := pb.GetDefaultOutDir()
-												outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
+											if s.Emit != nil {
+												emitName = s.Emit.Name
+											}
+										}
+										if emitName != "" {
+											for _, s := range p {
+												if s.ObjectCreate != nil {
+													schema, _ := evaluate.ExpressionString(s.ObjectCreate.Schema, task.GetConfig(), map[string]any{})
+													outdir := pb.GetDefaultOutDir()
+													outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
 
-												outpath := filepath.Join(outdir, outname)
-												outpath, _ = filepath.Rel(baseDir, outpath)
+													outpath := filepath.Join(outdir, outname)
+													outpath, _ = filepath.Rel(baseDir, outpath)
 
-												schemaPath, _ := filepath.Rel(baseDir, schema)
+													schemaPath, _ := filepath.Rel(baseDir, schema)
 
-												_ = schemaPath
+													_ = schemaPath
 
-												objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectCreate.Class, Schema: schemaPath}
-												gb.Objects = append(gb.Objects, objCreate)
+													objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectCreate.Class, Schema: schemaPath}
+													gb.Objects = append(gb.Objects, objCreate)
 
+												}
 											}
 										}
 									}
-								}
 
-								if len(gb.Objects) > 0 {
-									tmpl, err := template.New("graphscript").Parse(graphScript)
-									if err != nil {
-										panic(err)
-									}
+									if len(gb.Objects) > 0 {
+										tmpl, err := template.New("graphscript").Parse(graphScript)
+										if err != nil {
+											panic(err)
+										}
 
-									outfile, err := os.Create(filepath.Join(baseDir, fmt.Sprintf("%s.yaml", pb.Name)))
-									err = tmpl.Execute(outfile, gb)
-									outfile.Close()
-									if err != nil {
-										fmt.Printf("Error: %s\n", err)
+										outfile, err := os.Create(filepath.Join(baseDir, fmt.Sprintf("%s.yaml", pb.Name)))
+										if err != nil {
+											fmt.Printf("Error: %s\n", err)
+										}
+										err = tmpl.Execute(outfile, gb)
+										outfile.Close()
+										if err != nil {
+											fmt.Printf("Error: %s\n", err)
+										}
 									}
 								}
 							}

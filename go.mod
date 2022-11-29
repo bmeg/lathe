@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
-	github.com/bmeg/sifter v0.0.0-20220708191544-6d7c7b6ca1e1
+	github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/spf13/cobra v1.4.0
 	sigs.k8s.io/yaml v1.3.0
@@ -68,7 +68,7 @@ require (
 	golang.org/x/exp v0.0.0-20220218215828-6cf2b201936e // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
+	golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced // indirect

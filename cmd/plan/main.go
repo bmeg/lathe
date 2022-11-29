@@ -104,7 +104,7 @@ var Cmd = &cobra.Command{
 			log.Printf("Excluding %#v", exclude)
 		}
 
-		userInputs := map[string]any{}
+		userInputs := map[string]string{}
 
 		steps := []Step{}
 
@@ -130,24 +130,18 @@ var Cmd = &cobra.Command{
 
 								if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
-									localInputs := pb.PrepConfig(userInputs, baseDir)
-									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
-
-									//log.Printf("pb outdir %s", task.OutDir())
-
-									taskInputs, _ := pb.GetConfig(task)
+									config, _ := pb.PrepConfig(userInputs, baseDir)
+									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
 
 									inputs := []string{}
 									outputs := []string{}
-									for _, p := range taskInputs {
-										inputs = append(inputs, p)
+									for _, p := range pb.GetConfigFields() {
+										inputs = append(inputs, config[p.Name])
 									}
 
 									sinks, _ := pb.GetOutputs(task)
 									for _, v := range sinks {
-										for _, p := range v {
-											outputs = append(outputs, p)
-										}
+										outputs = append(outputs, v...)
 									}
 
 									emitters, _ := pb.GetEmitters(task)
@@ -181,14 +175,11 @@ var Cmd = &cobra.Command{
 										inputs := []string{}
 										outputs := []string{}
 										scriptInputs := sc.GetInputs()
-										for _, v := range scriptInputs {
-											inputs = append(inputs, v)
-										}
+										inputs = append(inputs, scriptInputs...)
 
 										scriptOutputs := sc.GetOutputs()
-										for _, v := range scriptOutputs {
-											outputs = append(outputs, v)
-										}
+										outputs = append(outputs, scriptOutputs...)
+
 										sName := uniqueName(pb.Name, names)
 										names = append(names, sName)
 										steps = append(steps, Step{
