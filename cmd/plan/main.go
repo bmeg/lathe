@@ -166,7 +166,7 @@ var Cmd = &cobra.Command{
 
 									if doPrep {
 										if err := pl.DoPrep(); err != nil {
-											log.Panicf("Prep Error: %s\n", err)
+											log.Errorf("Prep Error: %s\n", err)
 											return err
 										}
 									}
