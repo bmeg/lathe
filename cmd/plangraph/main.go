@@ -36,12 +36,8 @@ outdir: {{.Outdir}}
 
 config:
 {{range .Objects}}
-    {{.Name}}:
-        type: File
-        default: {{.Input}}
-    {{.Name}}Schema:
-        type: Dir
-        default: {{.Schema}}
+    {{.Name}}: {{.Input}}
+    {{.Name}}Schema: {{.Schema}}
 {{end}}
 
 inputs:
