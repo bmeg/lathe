@@ -2,10 +2,13 @@ module github.com/bmeg/lathe
 
 go 1.18
 
+replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.0.0-20221206235413-364160e59a79
+
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
