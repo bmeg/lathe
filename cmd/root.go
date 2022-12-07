@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bmeg/lathe/cmd/build"
+	"github.com/bmeg/lathe/cmd/data_validate"
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
 	"github.com/bmeg/lathe/cmd/plangraph"
@@ -26,6 +27,7 @@ func init() {
 	RootCmd.AddCommand(lint.Cmd)
 	RootCmd.AddCommand(build.Cmd)
 	RootCmd.AddCommand(schema_lint.Cmd)
+	RootCmd.AddCommand(data_validate.Cmd)
 	RootCmd.AddCommand(plangraph.Cmd)
 }
 
