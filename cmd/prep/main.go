@@ -15,8 +15,8 @@ var exclude = []string{}
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
-	Use:   "plan",
-	Short: "Scan directory to plan operations",
+	Use:   "prep",
+	Short: "Run prep scripts before a build",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
