@@ -9,6 +9,8 @@ import (
 	"github.com/bmeg/lathe/cmd/plan"
 	"github.com/bmeg/lathe/cmd/plangraph"
 	"github.com/bmeg/lathe/cmd/prep"
+	"github.com/bmeg/lathe/cmd/schema_add"
+	"github.com/bmeg/lathe/cmd/schema_create"
 	"github.com/bmeg/lathe/cmd/schema_lint"
 
 	"github.com/spf13/cobra"
@@ -26,7 +28,9 @@ func init() {
 	RootCmd.AddCommand(prep.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
 	RootCmd.AddCommand(build.Cmd)
+	RootCmd.AddCommand(schema_create.Cmd)
 	RootCmd.AddCommand(schema_lint.Cmd)
+	RootCmd.AddCommand(schema_add.Cmd)
 	RootCmd.AddCommand(data_validate.Cmd)
 	RootCmd.AddCommand(plangraph.Cmd)
 }
