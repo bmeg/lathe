@@ -135,6 +135,8 @@ var Cmd = &cobra.Command{
 										log.Printf("sifter config error %s: %s ", path, err)
 									} else {
 										task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
+										sourcePath, _ := filepath.Abs(path)
+										cmdPath, _ := filepath.Rel(baseDir, sourcePath)
 
 										inputs := []string{}
 										outputs := []string{}
@@ -143,6 +145,7 @@ var Cmd = &cobra.Command{
 												inputs = append(inputs, config[p.Name])
 											}
 										}
+										inputs = append(inputs, cmdPath)
 
 										sinks, _ := pb.GetOutputs(task)
 										for _, v := range sinks {
@@ -153,8 +156,6 @@ var Cmd = &cobra.Command{
 										for _, v := range emitters {
 											outputs = append(outputs, v)
 										}
-
-										cmdPath, _ := filepath.Rel(baseDir, path)
 
 										sName := uniqueName(pb.Name, names)
 										names = append(names, sName)
@@ -240,7 +241,8 @@ var Cmd = &cobra.Command{
 
 		for i := range steps {
 			for j := range steps[i].Inputs {
-				if k, err := filepath.Rel(baseDir, steps[i].Inputs[j]); err == nil {
+				inPath, _ := filepath.Abs(steps[i].Inputs[j])
+				if k, err := filepath.Rel(baseDir, inPath); err == nil {
 					steps[i].Inputs[j] = k
 				} else {
 					log.Printf("rel error for input %s: %s", steps[i].Name, err)
