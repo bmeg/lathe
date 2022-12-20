@@ -2,11 +2,15 @@ module github.com/bmeg/lathe
 
 go 1.18
 
-replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.0.0-20221206235413-364160e59a79
+replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f
+
+//replace github.com/santhosh-tekuri/jsonschema/v5 => /Users/ellrott/workspaces/jsonschema
 
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
-	github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7
+	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
+	github.com/bmeg/sifter v0.0.0-20221220202506-1253a83bd4a2
+	github.com/fatih/structtag v1.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
@@ -19,7 +23,6 @@ require (
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
 	github.com/basgys/goxml2json v1.1.0 // indirect
 	github.com/bmeg/flame v0.0.0-20220629214151-e9f416368cd4 // indirect
-	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 // indirect
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 // indirect
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect

@@ -36,12 +36,8 @@ outdir: {{.Outdir}}
 
 config:
 {{range .Objects}}
-    {{.Name}}:
-        type: File
-        default: {{.Input}}
-    {{.Name}}Schema:
-        type: Dir
-        default: {{.Schema}}
+    {{.Name}}: {{.Input}}
+    {{.Name}}Schema: {{.Schema}}
 {{end}}
 
 inputs:
@@ -131,8 +127,8 @@ var Cmd = &cobra.Command{
 										}
 										if emitName != "" {
 											for _, s := range p {
-												if s.ObjectCreate != nil {
-													schema, _ := evaluate.ExpressionString(s.ObjectCreate.Schema, task.GetConfig(), map[string]any{})
+												if s.ObjectValidate != nil {
+													schema, _ := evaluate.ExpressionString(s.ObjectValidate.Schema, task.GetConfig(), map[string]any{})
 													outdir := pb.GetDefaultOutDir()
 													outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
 
@@ -143,7 +139,7 @@ var Cmd = &cobra.Command{
 
 													_ = schemaPath
 
-													objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectCreate.Class, Schema: schemaPath}
+													objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectValidate.Class, Schema: schemaPath}
 													gb.Objects = append(gb.Objects, objCreate)
 
 												}

@@ -69,6 +69,7 @@ func contains(n string, c []string) bool {
 }
 
 func uniqueName(name string, used []string) string {
+	name = strings.Replace(name, "-", "_", -1)
 	if !contains(name, used) {
 		return name
 	}
@@ -129,40 +130,46 @@ var Cmd = &cobra.Command{
 
 								if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
 
-									config, _ := pb.PrepConfig(userInputs, baseDir)
-									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
+									config, err := pb.PrepConfig(userInputs, baseDir)
+									if err != nil {
+										log.Printf("sifter config error %s: %s ", path, err)
+									} else {
+										task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
 
-									inputs := []string{}
-									outputs := []string{}
-									for _, p := range pb.GetConfigFields() {
-										inputs = append(inputs, config[p.Name])
+										inputs := []string{}
+										outputs := []string{}
+										for _, p := range pb.GetConfigFields() {
+											if p.IsDir() || p.IsFile() {
+												inputs = append(inputs, config[p.Name])
+											}
+										}
+
+										sinks, _ := pb.GetOutputs(task)
+										for _, v := range sinks {
+											outputs = append(outputs, v...)
+										}
+
+										emitters, _ := pb.GetEmitters(task)
+										for _, v := range emitters {
+											outputs = append(outputs, v)
+										}
+
+										cmdPath, _ := filepath.Rel(baseDir, path)
+
+										sName := uniqueName(pb.Name, names)
+										names = append(names, sName)
+										steps = append(steps, Step{
+											Name:    sName,
+											Command: fmt.Sprintf("sifter run %s", cmdPath),
+											Inputs:  inputs,
+											Outputs: outputs,
+										})
 									}
-
-									sinks, _ := pb.GetOutputs(task)
-									for _, v := range sinks {
-										outputs = append(outputs, v...)
-									}
-
-									emitters, _ := pb.GetEmitters(task)
-									for _, v := range emitters {
-										outputs = append(outputs, v)
-									}
-
-									cmdPath, _ := filepath.Rel(baseDir, path)
-
-									sName := uniqueName(pb.Name, names)
-									names = append(names, sName)
-									steps = append(steps, Step{
-										Name:    sName,
-										Command: fmt.Sprintf("sifter run %s", cmdPath),
-										Inputs:  inputs,
-										Outputs: outputs,
-									})
 								}
 							} else {
 								pl := plans.Plan{}
 								if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
-									for _, sc := range pl.GetScripts() {
+									for i, sc := range pl.GetScripts() {
 										inputs := []string{}
 										outputs := []string{}
 										scriptInputs := sc.GetInputs()
@@ -171,7 +178,7 @@ var Cmd = &cobra.Command{
 										scriptOutputs := sc.GetOutputs()
 										outputs = append(outputs, scriptOutputs...)
 
-										sName := uniqueName(pb.Name, names)
+										sName := uniqueName(fmt.Sprintf("%s_%s", pl.Name, i), names)
 										names = append(names, sName)
 										steps = append(steps, Step{
 											Name:    sName,
@@ -236,7 +243,7 @@ var Cmd = &cobra.Command{
 				if k, err := filepath.Rel(baseDir, steps[i].Inputs[j]); err == nil {
 					steps[i].Inputs[j] = k
 				} else {
-					log.Printf("rel error: %s", err)
+					log.Printf("rel error for input %s: %s", steps[i].Name, err)
 				}
 			}
 			for j := range steps[i].Outputs {
@@ -257,6 +264,9 @@ var Cmd = &cobra.Command{
 		}
 
 		outfile, err := os.Create(filepath.Join(baseDir, "Snakefile"))
+		if err != nil {
+			return err
+		}
 		err = tmpl.Execute(outfile, steps)
 		return err
 	},
