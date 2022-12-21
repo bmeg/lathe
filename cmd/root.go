@@ -7,6 +7,7 @@ import (
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
 	"github.com/bmeg/lathe/cmd/plangraph"
+	"github.com/bmeg/lathe/cmd/prep"
 
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(plan.Cmd)
+	RootCmd.AddCommand(prep.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
 	RootCmd.AddCommand(build.Cmd)
 	RootCmd.AddCommand(plangraph.Cmd)
