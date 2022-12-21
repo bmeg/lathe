@@ -88,8 +88,8 @@ github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad/go.mod h1:ft96Irkp72
 github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f h1:0hSlzPWPtDhXAbdtRUPdiYNnBGJxiIaAmV+nNexqO7w=
 github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f/go.mod h1:FKdcjfQW6rpZSnxxUvEA5H/cDPdvJ/SZJQLWWXWGrZ0=
 github.com/bmeg/protoc-gen-grcp-rest-direct v0.0.0-20190228222353-4d40e8b9d305/go.mod h1:1S3ijn0o+w7RmSdfX3EQttlrF9csSziK8dpeh0nP4LU=
-github.com/bmeg/sifter v0.0.0-20221220202506-1253a83bd4a2 h1:Ez7iUgf8vEXPg2nAUal4RYHoe+HJlZDwFA5YH2ivlIg=
-github.com/bmeg/sifter v0.0.0-20221220202506-1253a83bd4a2/go.mod h1:DJTvuunT2rDi4HMxtn5KIzDl7mf1iiTxe+KMob5y13U=
+github.com/bmeg/sifter v0.0.0-20221221073302-8550fb56060f h1:RPKj8cckXza6njwA+seueJQNU2SkF29c28Y6G62PqjQ=
+github.com/bmeg/sifter v0.0.0-20221221073302-8550fb56060f/go.mod h1:VNXM7sgXay5Zn2TPeeiZGug5dnzrPgKkt/fK8iMdXmQ=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bombsimon/wsl/v2 v2.0.0/go.mod h1:mf25kr/SqFEPhhcxW1+7pxzGlW+hIl/hYTKY95VwV8U=
 github.com/bufbuild/buf v0.37.0/go.mod h1:lQ1m2HkIaGOFba6w/aC3KYBHhKEOESP3gaAEpS3dAFM=

@@ -9,7 +9,7 @@ replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsons
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
-	github.com/bmeg/sifter v0.0.0-20221220202506-1253a83bd4a2
+	github.com/bmeg/sifter v0.0.0-20221221073302-8550fb56060f
 	github.com/fatih/structtag v1.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1

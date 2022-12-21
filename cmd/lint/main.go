@@ -24,6 +24,8 @@ var Cmd = &cobra.Command{
 
 		userInputs := map[string]string{}
 
+		names := map[string]string{}
+
 		filepath.Walk(baseDir,
 			func(path string, info fs.FileInfo, err error) error {
 				if strings.HasSuffix(path, ".yaml") {
@@ -32,6 +34,11 @@ var Cmd = &cobra.Command{
 						//log.Printf("Checking %s\n", path)
 						if pb.Name == "" {
 							log.Printf("Empty transform name: %s", path)
+						}
+						if n, ok := names[pb.Name]; ok {
+							log.Printf("Non unique name %s, already used by %s", pb.Name, n)
+						} else {
+							names[pb.Name] = path
 						}
 						if pb.Outdir == "" {
 							log.Printf("Empty output path: %s", path)
