@@ -2,10 +2,17 @@ module github.com/bmeg/lathe
 
 go 1.18
 
+replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f
+
+//replace github.com/santhosh-tekuri/jsonschema/v5 => /Users/ellrott/workspaces/jsonschema
+
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
-	github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7
+	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
+	github.com/bmeg/sifter v0.0.0-20221222175747-c80d7c622367
+	github.com/fatih/structtag v1.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -16,7 +23,6 @@ require (
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
 	github.com/basgys/goxml2json v1.1.0 // indirect
 	github.com/bmeg/flame v0.0.0-20220629214151-e9f416368cd4 // indirect
-	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 // indirect
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 // indirect
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -32,7 +38,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-python/gpython v0.1.1-0.20220322084537-7da1de05fdb7 // indirect
+	github.com/go-python/gpython v0.1.1-0.20221005072539-6f8e06a46607 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
@@ -68,7 +74,7 @@ require (
 	golang.org/x/exp v0.0.0-20220218215828-6cf2b201936e // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e // indirect
+	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced // indirect

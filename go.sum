@@ -85,9 +85,13 @@ github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 h1:ngj395aMDI4GZaN77fwjt
 github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65/go.mod h1:wBLwQsr53I/0kdS4LYL7R4tMshZCVerCWnPTwMdKX3s=
 github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad h1:ICgBexeLB7iv/IQz4rsP+MimOXFZUwWSPojEypuOaQ8=
 github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad/go.mod h1:ft96Irkp72C7ZrUWRenG7LrF0NKMxXdRvsypo5Njhm4=
+github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f h1:0hSlzPWPtDhXAbdtRUPdiYNnBGJxiIaAmV+nNexqO7w=
+github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f/go.mod h1:FKdcjfQW6rpZSnxxUvEA5H/cDPdvJ/SZJQLWWXWGrZ0=
 github.com/bmeg/protoc-gen-grcp-rest-direct v0.0.0-20190228222353-4d40e8b9d305/go.mod h1:1S3ijn0o+w7RmSdfX3EQttlrF9csSziK8dpeh0nP4LU=
-github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7 h1:JPJerG2S63xwGwtc4xCuM1OBWFFGTTEGMKR+U81NfG8=
-github.com/bmeg/sifter v0.0.0-20221128222301-f1892884adb7/go.mod h1:DJTvuunT2rDi4HMxtn5KIzDl7mf1iiTxe+KMob5y13U=
+github.com/bmeg/sifter v0.0.0-20221221073302-8550fb56060f h1:RPKj8cckXza6njwA+seueJQNU2SkF29c28Y6G62PqjQ=
+github.com/bmeg/sifter v0.0.0-20221221073302-8550fb56060f/go.mod h1:VNXM7sgXay5Zn2TPeeiZGug5dnzrPgKkt/fK8iMdXmQ=
+github.com/bmeg/sifter v0.0.0-20221222175747-c80d7c622367 h1:dKl8PELc+zbTkre0WTTzochN1XfIHTzHZdwg4foaUhI=
+github.com/bmeg/sifter v0.0.0-20221222175747-c80d7c622367/go.mod h1:QsU/2GESpj7T77z8BYY7Dy93iZiY2RKqpk3eAGqARxU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bombsimon/wsl/v2 v2.0.0/go.mod h1:mf25kr/SqFEPhhcxW1+7pxzGlW+hIl/hYTKY95VwV8U=
 github.com/bufbuild/buf v0.37.0/go.mod h1:lQ1m2HkIaGOFba6w/aC3KYBHhKEOESP3gaAEpS3dAFM=
@@ -162,6 +166,8 @@ github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072/go.mod 
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
+github.com/fatih/structtag v1.2.0 h1:/OdNE99OxoI/PqaW/SuSK9uxxT3f/tcSZgon/ssNSx4=
+github.com/fatih/structtag v1.2.0/go.mod h1:mBJUNpUnHmRKrKlQQlmCrh5PuhftFbNv8Ys4/aAZl94=
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/flosch/pongo2 v0.0.0-20190707114632-bbf5a6c351f4/go.mod h1:T9YF2M40nIgbVgp3rreNmTged+9HrbNTIQf1PsaIiTA=
 github.com/fortytw2/leaktest v1.2.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
@@ -189,6 +195,8 @@ github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab/go.mod h1:/P9AE
 github.com/go-ole/go-ole v1.2.1/go.mod h1:7FAglXiTm7HKlQRDeOQ6ZNUHidzCWXuZWq/1dTyBNF8=
 github.com/go-python/gpython v0.1.1-0.20220322084537-7da1de05fdb7 h1:00ReChK6LHh3lXPOEppc6m2f0I00SDi2QywBMPMpa0E=
 github.com/go-python/gpython v0.1.1-0.20220322084537-7da1de05fdb7/go.mod h1:MZULYAhL46tg4yjwkUxZykGzR7Y3PW9bwlQ9ol/mkPU=
+github.com/go-python/gpython v0.1.1-0.20221005072539-6f8e06a46607 h1:xhi3l9LtrO3o26hk+A8IjUWolN0ql8AmJMfIaYNQ4i0=
+github.com/go-python/gpython v0.1.1-0.20221005072539-6f8e06a46607/go.mod h1:fUN4z1X+GFaOwPOoHOAM8MOPnh1NJatWo/cDqGlZDEI=
 github.com/go-resty/resty/v2 v2.1.0/go.mod h1:dZGr0i9PLlaaTD4H/hoZIDjQ+r6xq8mgbRzHZf7f2J8=
 github.com/go-sourcemap/sourcemap v2.1.2+incompatible/go.mod h1:F8jJfvm2KbVjc5NqelyYJmf/v5J0dwNLS2mL4sNA1Jg=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
@@ -861,6 +869,8 @@ golang.org/x/sys v0.0.0-20210909193231-528a39cd75f3/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e h1:w36l2Uw3dRan1K3TyXriXvY+6T56GNmlKGcqiQUJDfM=
 golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 h1:fqTvyMIIj+HRzMmnzr9NtpHP6uVpvB5fkHcgPDC4nu8=
+golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 h1:v+OssWQX+hTHEmOBgwxdZxK4zHq3yOs8F9J7mk0PY8E=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
