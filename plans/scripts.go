@@ -35,13 +35,27 @@ type Template struct {
 	Scripts map[string]any   `json:"scripts"`
 }
 
+type CollectData struct {
+	Class  string `json:"class"`
+	Output string `json:"output"`
+	path   string
+}
+
+type FileRecord struct {
+	DownloadDate string `json:"downloadDate"`
+	Source       string `json:"source"`
+	Path         string `json:"path"`
+}
+
 type Plan struct {
-	Class     string               `json:"class"`
-	Name      string               `json:"name"`
-	Scripts   map[string]*Script   `json:"scripts"`
-	Templates map[string]*Template `json:"templates"`
-	Prep      []PrepStage          `json:"prep"`
-	path      string
+	Class       string               `json:"class"`
+	Name        string               `json:"name"`
+	Scripts     map[string]*Script   `json:"scripts"`
+	Templates   map[string]*Template `json:"templates"`
+	Prep        []PrepStage          `json:"prep"`
+	Collections []CollectData        `json:"collections"`
+	Files       []FileRecord         `json:"files"`
+	path        string
 }
 
 func (pl *Plan) GetScripts() map[string]*Script {
@@ -54,10 +68,7 @@ func (pl *Plan) GetScripts() map[string]*Script {
 
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 func (pl *Plan) DoPrep() error {
@@ -97,6 +108,16 @@ func (pl *Plan) runScript(command string) error {
 
 func (sc *Script) GetCommand() string {
 	return sc.CommandLine
+}
+
+func (pl *Plan) GetCollections() []CollectData {
+	return pl.Collections
+}
+
+func (cl CollectData) GetOutputPath() string {
+	path := filepath.Join(filepath.Dir(cl.path), cl.Output)
+	npath, _ := filepath.Abs(path)
+	return npath
 }
 
 func (sc *Script) GetInputs() []string {

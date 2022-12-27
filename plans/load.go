@@ -45,5 +45,9 @@ func ParseFile(relpath string, conf *Plan) error {
 		v.path = path
 	}
 
+	for i := range conf.Collections {
+		conf.Collections[i].path = path
+	}
+
 	return nil
 }

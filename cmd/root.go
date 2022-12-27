@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bmeg/lathe/cmd/build"
+	"github.com/bmeg/lathe/cmd/class_concat"
 	"github.com/bmeg/lathe/cmd/class_find"
 	"github.com/bmeg/lathe/cmd/class_list"
 	"github.com/bmeg/lathe/cmd/data_validate"
@@ -39,6 +40,7 @@ func init() {
 	RootCmd.AddCommand(plangraph.Cmd)
 	RootCmd.AddCommand(class_list.Cmd)
 	RootCmd.AddCommand(class_find.Cmd)
+	RootCmd.AddCommand(class_concat.Cmd)
 }
 
 var genBashCompletionCmd = &cobra.Command{

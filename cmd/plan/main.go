@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/bmeg/lathe/plans"
+	"github.com/bmeg/lathe/util"
 	"github.com/bmeg/sifter/playbook"
 	"github.com/bmeg/sifter/task"
 	"github.com/spf13/cobra"
@@ -189,6 +190,50 @@ var Cmd = &cobra.Command{
 											Workdir: sc.GetWorkdir(),
 											MemMB:   sc.MemMB,
 										})
+									}
+									for i, concat := range pl.GetCollections() {
+										fmt.Printf("Collection: %s %d\n", concat.GetOutputPath(), i)
+
+										sName := uniqueName(fmt.Sprintf("%s_collect_%d", pl.Name, i), names)
+										names = append(names, sName)
+										//./lathe class-concat ../bmeg-etl/transform/ allele -o ../bmeg-etl/output/allele/allele.json.gz
+										inputs := []string{}
+
+										util.ScanSifter(dir, func(pb *playbook.Playbook) {
+											//localInputs, err := pb.PrepConfig(userInputs, baseDir)
+											//task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
+
+											for pname, p := range pb.Pipelines {
+												emitName := ""
+												for _, s := range p {
+													if s.Emit != nil {
+														emitName = s.Emit.Name
+													}
+												}
+												if emitName != "" {
+													for _, s := range p {
+														if s.ObjectValidate != nil {
+															if s.ObjectValidate.Class == concat.Class {
+																outdir := pb.GetDefaultOutDir()
+																outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
+																outpath := filepath.Join(outdir, outname)
+																inputs = append(inputs, outpath)
+															}
+														}
+													}
+												}
+											}
+
+										})
+
+										outFile, _ := filepath.Rel(baseDir, concat.GetOutputPath())
+										steps = append(steps, Step{
+											Name:    sName,
+											Command: fmt.Sprintf("lathe class-concat %s %s -o %s", dir, concat.Class, outFile),
+											Inputs:  inputs,
+											Outputs: []string{outFile},
+										})
+
 									}
 								} else {
 									source, _ := ioutil.ReadFile(path)
