@@ -117,13 +117,13 @@ var Cmd = &cobra.Command{
 				fmt.Printf("Error compiling %s : %s\n", f, err)
 			} else {
 				if len(sch.Types) == 1 && sch.Types[0] == "object" {
-					fmt.Printf("%s\n", sch.Id)
+					fmt.Printf("%s\n", sch.Title)
 					for k, v := range sch.Properties {
 						fmt.Printf("\t%s - %#v\n", k, v.Title)
 						if v.Ref != nil {
 							if isEdge(v.Ref.Location) {
 								//fmt.Printf("Ref: %#v\n", v.Ref.Location)
-								fmt.Printf("%s --> %s\n", sch.Id, v.Title)
+								fmt.Printf("%s --> %s\n", sch.Title, v.Title)
 								fmt.Printf("Extension: %#v\n", v.Extensions)
 								tags, err := structtag.Parse(string(v.Description))
 								if err == nil {

@@ -63,7 +63,7 @@ var Cmd = &cobra.Command{
 			fmt.Printf("Error compiling %s : %s\n", schemaFile, err)
 		} else {
 			if len(sch.Types) == 1 && sch.Types[0] == "object" {
-				fmt.Printf("OK: %s %s (%s)\n", schemaFile, sch.Id, sch.Title)
+				fmt.Printf("OK: %s %s (%s)\n", schemaFile, sch.Title, sch.Title)
 			}
 		}
 

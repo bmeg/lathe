@@ -139,7 +139,7 @@ var Cmd = &cobra.Command{
 
 													_ = schemaPath
 
-													objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectValidate.Class, Schema: schemaPath}
+													objCreate := ObjectConvertStep{Name: pname, Input: outpath, Class: s.ObjectValidate.Title, Schema: schemaPath}
 													gb.Objects = append(gb.Objects, objCreate)
 
 												}

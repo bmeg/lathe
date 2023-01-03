@@ -2,14 +2,10 @@ module github.com/bmeg/lathe
 
 go 1.18
 
-replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.0.0-20221214044651-ecb619a20d1f
-
-//replace github.com/santhosh-tekuri/jsonschema/v5 => /Users/ellrott/workspaces/jsonschema
-
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
-	github.com/bmeg/sifter v0.0.0-20221222175747-c80d7c622367
+	github.com/bmeg/sifter v0.0.0-20230103234436-06bf378c5ac4
 	github.com/fatih/structtag v1.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1

@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 							outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
 							outpath := filepath.Join(outdir, outname)
 							//outpath, _ = filepath.Rel(baseDir, outpath)
-							fmt.Printf("%s\t%s\n", s.ObjectValidate.Class, outpath)
+							fmt.Printf("%s\t%s\n", s.ObjectValidate.Title, outpath)
 						}
 					}
 				}

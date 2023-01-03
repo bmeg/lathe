@@ -52,7 +52,7 @@ var Cmd = &cobra.Command{
 				if emitName != "" {
 					for _, s := range p {
 						if s.ObjectValidate != nil {
-							if s.ObjectValidate.Class == className {
+							if s.ObjectValidate.Title == className {
 								outdir := pb.GetDefaultOutDir()
 								outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
 								outpath := filepath.Join(outdir, outname)
