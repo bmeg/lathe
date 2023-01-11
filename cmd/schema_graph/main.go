@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/fatih/structtag"
+	"github.com/bmeg/sifter/schema"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -98,43 +98,16 @@ var Cmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		jsonschema.Loaders["file"] = yamlLoader
+		sch, _ := schema.Load(args[0])
 
-		compiler := jsonschema.NewCompiler()
-		compiler.ExtractAnnotations = true
-
-		compiler.RegisterExtension("reference_type_enum", referenceMeta, referenceCompiler{})
-
-		fileList, err := filepath.Glob(filepath.Join(args[0], "*.yaml"))
-		if err != nil {
-			return err
-		}
-
-		for _, f := range fileList {
-			sch, err := compiler.Compile(f)
-
-			if err != nil {
-				fmt.Printf("Error compiling %s : %s\n", f, err)
-			} else {
-				if len(sch.Types) == 1 && sch.Types[0] == "object" {
-					fmt.Printf("%s\n", sch.Title)
-					for k, v := range sch.Properties {
-						fmt.Printf("\t%s - %#v\n", k, v.Title)
-						if v.Ref != nil {
-							if isEdge(v.Ref.Location) {
-								//fmt.Printf("Ref: %#v\n", v.Ref.Location)
-								fmt.Printf("%s --> %s\n", sch.Title, v.Title)
-								fmt.Printf("Extension: %#v\n", v.Extensions)
-								tags, err := structtag.Parse(string(v.Description))
-								if err == nil {
-									for _, t := range tags.Tags() {
-										fmt.Printf("%s: %s\n", t.Key, t.Name)
-									}
-								}
-							}
-						}
+		for _, cls := range sch.Classes {
+			for propName, prop := range cls.Properties {
+				if ext, ok := prop.Extensions[schema.GraphExtensionTag]; ok {
+					gExt := ext.(schema.GraphExtension)
+					for k, v := range gExt.Backrefs {
+						fmt.Printf("%s\t%s\t%s\n", cls.Title, propName, k)
+						fmt.Printf("%s\t%s\t%s\n", k, v, cls.Title)
 					}
-
 				}
 			}
 		}

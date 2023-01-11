@@ -114,7 +114,8 @@ var Cmd = &cobra.Command{
 
 								localInputs, err := pb.PrepConfig(userInputs, baseDir)
 								if err == nil {
-									task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
+									scriptDir := filepath.Dir(path)
+									task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), localInputs)
 
 									gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: outDir}
 

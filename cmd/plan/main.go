@@ -135,7 +135,8 @@ var Cmd = &cobra.Command{
 									if err != nil {
 										log.Printf("sifter config error %s: %s ", path, err)
 									} else {
-										task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
+										scriptDir := filepath.Dir(path)
+										task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), config)
 										sourcePath, _ := filepath.Abs(path)
 										cmdPath, _ := filepath.Rel(baseDir, sourcePath)
 

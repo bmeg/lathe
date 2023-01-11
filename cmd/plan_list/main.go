@@ -59,7 +59,8 @@ var Cmd = &cobra.Command{
 
 									config, err := pb.PrepConfig(userInputs, baseDir)
 									if err == nil {
-										task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), config)
+										scriptDir := filepath.Dir(path)
+										task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), config)
 										//sourcePath, _ := filepath.Abs(path)
 										//cmdPath, _ := filepath.Rel(baseDir, sourcePath)
 
