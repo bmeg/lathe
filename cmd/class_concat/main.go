@@ -26,7 +26,7 @@ var Cmd = &cobra.Command{
 		className := args[1]
 		//userInputs := map[string]string{}
 
-		var outStream io.Writer = os.Stdout
+		var outStream io.WriteCloser = os.Stdout
 
 		if outFile != "" {
 			var err error
@@ -70,6 +70,8 @@ var Cmd = &cobra.Command{
 				}
 			}
 		})
+
+		outStream.Close()
 		return nil
 	},
 }
