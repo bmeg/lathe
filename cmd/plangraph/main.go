@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,7 +54,7 @@ pipelines:
         - from: {{.Name}}
         - graphBuild:
             schema: "{{ "{{config."}}{{.Name}}Schema{{ "}}" }}"
-            class: {{.Class}}
+            title: {{.Class}}
 {{end}}
 `
 
@@ -78,8 +79,8 @@ func uniqueName(name string, used []string) string {
 	}
 }
 
-var changeDir = ""
-var outDir = "./"
+var outScriptDir = ""
+var outDataDir = "./"
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
@@ -90,16 +91,17 @@ var Cmd = &cobra.Command{
 
 		baseDir, _ := filepath.Abs(args[0])
 
-		if changeDir != "" {
-			baseDir, _ = filepath.Abs(changeDir)
+		if outScriptDir != "" {
+			baseDir, _ = filepath.Abs(outScriptDir)
 		} else if len(args) > 1 {
 			return fmt.Errorf("for multiple input directories, based dir must be defined")
 		}
 
 		_ = baseDir
 
-		outDir, _ := filepath.Abs(outDir)
-		outDir, _ = filepath.Rel(baseDir, outDir)
+		outDataDir, _ = filepath.Abs(outDataDir)
+		outScriptDir, _ = filepath.Abs(outScriptDir)
+		//outScriptDir, _ = filepath.Rel(baseDir, outScriptDir)
 
 		userInputs := map[string]string{}
 
@@ -108,6 +110,7 @@ var Cmd = &cobra.Command{
 			filepath.Walk(startDir,
 				func(path string, info fs.FileInfo, err error) error {
 					if strings.HasSuffix(path, ".yaml") {
+						log.Printf("Scanning: %s", path)
 						pb := playbook.Playbook{}
 						if sifterErr := playbook.ParseFile(path, &pb); sifterErr == nil {
 							if len(pb.Pipelines) > 0 || len(pb.Inputs) > 0 {
@@ -117,7 +120,12 @@ var Cmd = &cobra.Command{
 									scriptDir := filepath.Dir(path)
 									task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), localInputs)
 
-									gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: outDir}
+									curDataDir, err := filepath.Rel(outScriptDir, outDataDir)
+									if err != nil {
+										log.Printf("Path error: %s", err)
+									}
+
+									gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: curDataDir}
 
 									for pname, p := range pb.Pipelines {
 										emitName := ""
@@ -134,9 +142,9 @@ var Cmd = &cobra.Command{
 													outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
 
 													outpath := filepath.Join(outdir, outname)
-													outpath, _ = filepath.Rel(baseDir, outpath)
+													outpath, _ = filepath.Rel(outScriptDir, outpath)
 
-													schemaPath, _ := filepath.Rel(baseDir, schema)
+													schemaPath, _ := filepath.Rel(outScriptDir, schema)
 
 													_ = schemaPath
 
@@ -149,12 +157,13 @@ var Cmd = &cobra.Command{
 									}
 
 									if len(gb.Objects) > 0 {
+										log.Printf("Found %d objects", len(gb.Objects))
 										tmpl, err := template.New("graphscript").Parse(graphScript)
 										if err != nil {
 											panic(err)
 										}
 
-										outfile, err := os.Create(filepath.Join(baseDir, fmt.Sprintf("%s.yaml", pb.Name)))
+										outfile, err := os.Create(filepath.Join(outScriptDir, fmt.Sprintf("%s.yaml", pb.Name)))
 										if err != nil {
 											fmt.Printf("Error: %s\n", err)
 										}
@@ -166,6 +175,8 @@ var Cmd = &cobra.Command{
 									}
 								}
 							}
+						} else {
+							//log.Printf("Error: %s", sifterErr)
 						}
 					}
 					return nil
@@ -177,6 +188,6 @@ var Cmd = &cobra.Command{
 
 func init() {
 	flags := Cmd.Flags()
-	flags.StringVarP(&changeDir, "dir", "C", changeDir, "Change Directory for script base")
-	flags.StringVarP(&outDir, "out", "o", outDir, "Change output Directory")
+	flags.StringVarP(&outScriptDir, "dir", "C", outScriptDir, "Change Directory for script base")
+	flags.StringVarP(&outDataDir, "out", "o", outDataDir, "Change output Directory")
 }
