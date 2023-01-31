@@ -6,7 +6,7 @@ require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65
-	github.com/bmeg/sifter v0.0.0-20230111005747-df0d84216018
+	github.com/bmeg/sifter v0.0.0-20230131003627-ceb1ce7593bc
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
@@ -33,7 +33,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-python/gpython v0.1.1-0.20221005072539-6f8e06a46607 // indirect
+	github.com/go-python/gpython v0.1.1-0.20230118193350-337df2ad1ec2 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
