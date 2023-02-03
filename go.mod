@@ -6,7 +6,7 @@ require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65
-	github.com/bmeg/sifter v0.0.0-20230131003627-ceb1ce7593bc
+	github.com/bmeg/sifter v0.0.0-20230203233250-02b6ed56c5f4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0

@@ -15,14 +15,15 @@ var Cmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		sch, _ := schema.Load(args[0], schema.LoadOpt{
+		sch, err := schema.Load(args[0], schema.LoadOpt{
 			LogError: func(uri string, err error) {
 				log.Errorf("Error compiling %s : %s\n", uri, err)
 			},
 		})
-
-		for _, cls := range sch.Classes {
-			fmt.Printf("OK: %s (%s)\n", cls.Title, cls.Location)
+		if err == nil {
+			for _, cls := range sch.Classes {
+				fmt.Printf("OK: %s (%s)\n", cls.Title, cls.Location)
+			}
 		}
 		return nil
 	},
