@@ -147,7 +147,7 @@ var Cmd = &cobra.Command{
 												inputs = append(inputs, config[p.Name])
 											}
 										}
-										inputs = append(inputs, cmdPath)
+										inputs = append(inputs, sourcePath)
 
 										sinks, _ := pb.GetOutputs(task)
 										for _, v := range sinks {
