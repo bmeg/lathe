@@ -83,6 +83,11 @@ func uniqueName(name string, used []string) string {
 	return name
 }
 
+type stats struct {
+	sifterParseCount int
+	latheParseCount  int
+}
+
 var changeDir = ""
 var exclude = []string{}
 
@@ -111,6 +116,8 @@ var Cmd = &cobra.Command{
 
 		names := []string{}
 
+		scanStats := stats{}
+
 		for _, dir := range args {
 			startDir, _ := filepath.Abs(dir)
 			filepath.Walk(startDir,
@@ -135,6 +142,7 @@ var Cmd = &cobra.Command{
 									if err != nil {
 										log.Printf("sifter config error %s: %s ", path, err)
 									} else {
+										scanStats.sifterParseCount++
 										scriptDir := filepath.Dir(path)
 										task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), config)
 										sourcePath, _ := filepath.Abs(path)
@@ -172,6 +180,7 @@ var Cmd = &cobra.Command{
 							} else {
 								pl := plans.Plan{}
 								if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+									scanStats.latheParseCount++
 									for i, sc := range pl.GetScripts() {
 										inputs := []string{}
 										outputs := []string{}
@@ -316,6 +325,10 @@ var Cmd = &cobra.Command{
 			return err
 		}
 		err = tmpl.Execute(outfile, steps)
+
+		log.Printf("Sifter file count: %d", scanStats.sifterParseCount)
+		log.Printf("Lathe file count: %d", scanStats.latheParseCount)
+
 		return err
 	},
 }
