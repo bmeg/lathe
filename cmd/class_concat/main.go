@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,13 +29,13 @@ func containsPrefix(s string, n []string) bool {
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
-	Use:   "class-concat <basedir> <class name>",
+	Use:   "class-concat <class name> <basedir>",
 	Short: "Concatinate output files of class type",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		baseDir := args[0]
-		className := args[1]
+		className := args[0]
+		baseDir := args[1]
 		//userInputs := map[string]string{}
 
 		excludeABS := []string{}
@@ -58,7 +59,7 @@ var Cmd = &cobra.Command{
 		util.ScanSifter(baseDir, func(pb *playbook.Playbook) {
 			//localInputs, err := pb.PrepConfig(userInputs, baseDir)
 			//task := task.NewTask(pb.Name, baseDir, pb.GetDefaultOutDir(), localInputs)
-			if containsPrefix(pb.GetPath(), excludeABS) {
+			if !containsPrefix(pb.GetPath(), excludeABS) {
 
 				for pname, p := range pb.Pipelines {
 					emitName := ""
@@ -70,6 +71,7 @@ var Cmd = &cobra.Command{
 					if emitName != "" {
 						for _, s := range p {
 							if s.ObjectValidate != nil {
+								//log.Printf("Found: %s", s.ObjectValidate.Title)
 								if s.ObjectValidate.Title == className {
 									outdir := pb.GetDefaultOutDir()
 									outname := fmt.Sprintf("%s.%s.%s.json.gz", pb.Name, pname, emitName)
@@ -81,6 +83,8 @@ var Cmd = &cobra.Command{
 											outStream.Write(line)
 											outStream.Write([]byte("\n"))
 										}
+									} else {
+										log.Printf("Read error: %s", err)
 									}
 								}
 							}

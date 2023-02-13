@@ -10,8 +10,9 @@ import (
 	"github.com/bmeg/lathe/cmd/data_validate"
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
+	"github.com/bmeg/lathe/cmd/plan_build"
+	"github.com/bmeg/lathe/cmd/plan_graph"
 	"github.com/bmeg/lathe/cmd/plan_list"
-	"github.com/bmeg/lathe/cmd/plangraph"
 	"github.com/bmeg/lathe/cmd/prep"
 	"github.com/bmeg/lathe/cmd/schema_add"
 	"github.com/bmeg/lathe/cmd/schema_create"
@@ -38,7 +39,8 @@ func init() {
 	RootCmd.AddCommand(schema_add.Cmd)
 	RootCmd.AddCommand(schema_graph.Cmd)
 	RootCmd.AddCommand(data_validate.Cmd)
-	RootCmd.AddCommand(plangraph.Cmd)
+	RootCmd.AddCommand(plan_build.Cmd)
+	RootCmd.AddCommand(plan_graph.Cmd)
 	RootCmd.AddCommand(plan_list.Cmd)
 	RootCmd.AddCommand(class_list.Cmd)
 	RootCmd.AddCommand(class_find.Cmd)

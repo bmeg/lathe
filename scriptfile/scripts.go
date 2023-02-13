@@ -1,4 +1,4 @@
-package plans
+package scriptfile
 
 import (
 	"encoding/json"
@@ -47,7 +47,7 @@ type FileRecord struct {
 	Path         string `json:"path"`
 }
 
-type Plan struct {
+type ScriptFile struct {
 	Class       string               `json:"class"`
 	Name        string               `json:"name"`
 	Scripts     map[string]*Script   `json:"scripts"`
@@ -58,7 +58,7 @@ type Plan struct {
 	path        string
 }
 
-func (pl *Plan) GetScripts() map[string]*Script {
+func (pl *ScriptFile) GetScripts() map[string]*Script {
 	out := pl.GenerateScripts()
 	for k, v := range pl.Scripts {
 		out[k] = v
@@ -71,7 +71,7 @@ func exists(filename string) bool {
 	return !os.IsNotExist(err)
 }
 
-func (pl *Plan) DoPrep() error {
+func (pl *ScriptFile) DoPrep() error {
 	planPath, _ := filepath.Abs(pl.path)
 	planDir := filepath.Dir(planPath)
 	for _, s := range pl.Prep {
@@ -91,7 +91,7 @@ func (pl *Plan) DoPrep() error {
 
 }
 
-func (pl *Plan) runScript(command string) error {
+func (pl *ScriptFile) runScript(command string) error {
 	planPath, _ := filepath.Abs(pl.path)
 	workdir := filepath.Dir(planPath)
 	cmdLine, err := shlex.Split(command)
@@ -110,7 +110,7 @@ func (sc *Script) GetCommand() string {
 	return sc.CommandLine
 }
 
-func (pl *Plan) GetCollections() []CollectData {
+func (pl *ScriptFile) GetCollections() []CollectData {
 	return pl.Collections
 }
 
@@ -147,7 +147,7 @@ func (sc *Script) GetWorkdir() string {
 	return filepath.Dir(f)
 }
 
-func (pl *Plan) GenerateScripts() map[string]*Script {
+func (pl *ScriptFile) GenerateScripts() map[string]*Script {
 	out := map[string]*Script{}
 
 	for tName, t := range pl.Templates {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bmeg/lathe/plans"
+	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/sifter/playbook"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -51,8 +51,8 @@ var Cmd = &cobra.Command{
 							}
 						}
 					} else {
-						pl := plans.Plan{}
-						if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+						pl := scriptfile.ScriptFile{}
+						if latheErr := scriptfile.ParseFile(path, &pl); latheErr == nil {
 							if pl.Name == "" {
 								log.Printf("lathe file %s missing name", path)
 							}

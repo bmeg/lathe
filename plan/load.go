@@ -1,4 +1,4 @@
-package plans
+package plan
 
 import (
 	"fmt"
@@ -7,6 +7,28 @@ import (
 
 	"sigs.k8s.io/yaml"
 )
+
+type BuildCommandsStep struct {
+	Dir string `json:"dir"`
+}
+
+type CollectClassStep struct {
+	Title  string `json:"title"`
+	Dir    string `json:"dir"`
+	Output string `json:"output"`
+}
+
+type Step struct {
+	BuildCommands *BuildCommandsStep `json:"buildCommands"`
+	CollectClass  *CollectClassStep  `json:"collectClass"`
+}
+
+type Plan struct {
+	Class string `json:"class"`
+	Name  string `json:"name"`
+	Steps []Step `json:"steps"`
+	path  string
+}
 
 // Parse parses a YAML doc into the given Config instance.
 func parse(raw []byte, conf *Plan) error {
@@ -39,15 +61,6 @@ func ParseFile(relpath string, conf *Plan) error {
 	}
 
 	conf.path = path
-
-	for k, v := range conf.Scripts {
-		v.name = k
-		v.path = path
-	}
-
-	for i := range conf.Collections {
-		conf.Collections[i].path = path
-	}
 
 	return nil
 }

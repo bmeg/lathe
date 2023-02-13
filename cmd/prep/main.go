@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bmeg/lathe/plans"
+	"github.com/bmeg/lathe/scriptfile"
 	"github.com/spf13/cobra"
 )
 
@@ -39,8 +39,8 @@ var Cmd = &cobra.Command{
 							}
 						}
 						if !doExclude {
-							pl := plans.Plan{}
-							if latheErr := plans.ParseFile(path, &pl); latheErr == nil {
+							pl := scriptfile.ScriptFile{}
+							if latheErr := scriptfile.ParseFile(path, &pl); latheErr == nil {
 								if err := pl.DoPrep(); err != nil {
 									log.Printf("Prep Error: %s\n", err)
 									return err

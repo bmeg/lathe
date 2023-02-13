@@ -1,4 +1,4 @@
-package plangraph
+package plan_graph
 
 import (
 	"fmt"
