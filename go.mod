@@ -2,6 +2,8 @@ module github.com/bmeg/lathe
 
 go 1.18
 
+replace github.com/bmeg/sifter v0.0.0-20230207212353-679b6aaefaac => /Users/ellrott/workspaces/sifter
+
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
@@ -10,6 +12,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
+	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -18,7 +21,7 @@ require (
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
 	github.com/basgys/goxml2json v1.1.0 // indirect
-	github.com/bmeg/flame v0.0.0-20230207210932-5ea8eb53c6b9 // indirect
+	github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a // indirect
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -76,5 +79,4 @@ require (
 	google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced // indirect
 	google.golang.org/grpc v1.38.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
