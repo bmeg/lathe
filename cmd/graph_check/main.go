@@ -1,6 +1,7 @@
 package graph_check
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,6 +15,8 @@ import (
 	"github.com/bmeg/sifter/schema"
 	"github.com/bmeg/sifter/task"
 	"github.com/spf13/cobra"
+
+	"github.com/cockroachdb/pebble"
 )
 
 type output struct {
@@ -24,6 +27,10 @@ type output struct {
 
 var nLoaderThreads int = 4
 var nGenThreads int = 4
+
+var vPrefix string = "v"
+var tPrefix string = "t"
+var fPrefix string = "f"
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
@@ -129,7 +136,13 @@ var Cmd = &cobra.Command{
 			path string
 			line int
 		}
+		type dbEntry struct {
+			vertexID string
+			edgeFrom string
+			edgeTo   string
+		}
 		logInput := make(chan logData, 10)
+		dbInput := make(chan dbEntry, 100)
 		genWG := &sync.WaitGroup{}
 		for i := 0; i < nGenThreads; i++ {
 			genWG.Add(1)
@@ -139,7 +152,11 @@ var Cmd = &cobra.Command{
 					if err == nil {
 						for _, e := range elems {
 							if e.Vertex != nil {
-								//fmt.Printf("id: %s\n", e.Vertex.Gid)
+								dbInput <- dbEntry{vertexID: e.Vertex.Gid}
+							} else if e.InEdge != nil {
+								dbInput <- dbEntry{edgeFrom: e.InEdge.From, edgeTo: e.InEdge.To}
+							} else if e.OutEdge != nil {
+								dbInput <- dbEntry{edgeFrom: e.OutEdge.From, edgeTo: e.OutEdge.To}
 							}
 						}
 					} else {
@@ -153,14 +170,66 @@ var Cmd = &cobra.Command{
 				genWG.Done()
 			}()
 		}
+
 		go func() {
 			genWG.Wait()
 			close(logInput)
+			close(dbInput)
 		}()
 
-		for l := range logInput {
-			log.Printf("%s:%d %s", l.path, l.line, l.err)
+		go func() {
+			for l := range logInput {
+				log.Printf("%s:%d %s", l.path, l.line, l.err)
+			}
+		}()
+
+		db, err := pebble.Open("keystore.db", &pebble.Options{})
+		if err != nil {
+			log.Printf("%s", err)
 		}
+
+		batch := db.NewBatch()
+		pbw := &pebbleBulkWrite{db, batch, nil, nil, 0}
+
+		for d := range dbInput {
+			if d.vertexID != "" {
+				k := vPrefix + d.vertexID
+				pbw.Set([]byte(k), []byte{})
+			} else {
+				k1 := tPrefix + d.edgeTo
+				pbw.Set([]byte(k1), []byte{})
+				k2 := fPrefix + d.edgeFrom
+				pbw.Set([]byte(k2), []byte{})
+			}
+			//fmt.Printf("%d\n", pbw.curSize)
+		}
+		pbw.Close()
+
+		it := db.NewIter(&pebble.IterOptions{LowerBound: []byte(tPrefix)})
+		for it.First(); it.Valid() && bytes.HasPrefix(it.Key(), []byte(tPrefix)); it.Next() {
+			k := it.Key()
+			k[0] = 'v'
+			_, cl, err := db.Get(k)
+			if err != nil {
+				log.Printf("Vertex %s not found", k[1:])
+			} else {
+				cl.Close()
+			}
+		}
+
+		it = db.NewIter(&pebble.IterOptions{LowerBound: []byte(fPrefix)})
+		for it.First(); it.Valid() && bytes.HasPrefix(it.Key(), []byte(fPrefix)); it.Next() {
+			k := it.Key()
+			k[0] = 'v'
+			_, cl, err := db.Get(k)
+			if err != nil {
+				log.Printf("Vertex %s not found", k[1:])
+			} else {
+				cl.Close()
+			}
+		}
+
+		it.Close()
 
 		return nil
 	},
