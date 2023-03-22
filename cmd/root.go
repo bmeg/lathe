@@ -8,6 +8,7 @@ import (
 	"github.com/bmeg/lathe/cmd/class_find"
 	"github.com/bmeg/lathe/cmd/class_list"
 	"github.com/bmeg/lathe/cmd/data_validate"
+	"github.com/bmeg/lathe/cmd/graph_build"
 	"github.com/bmeg/lathe/cmd/graph_check"
 	"github.com/bmeg/lathe/cmd/lint"
 	"github.com/bmeg/lathe/cmd/plan"
@@ -47,6 +48,7 @@ func init() {
 	RootCmd.AddCommand(class_find.Cmd)
 	RootCmd.AddCommand(class_concat.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
+	RootCmd.AddCommand(graph_build.Cmd)
 
 }
 

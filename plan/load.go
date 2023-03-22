@@ -18,9 +18,17 @@ type CollectClassStep struct {
 	Output string `json:"output"`
 }
 
+type GraphGenStep struct {
+	Dir            string   `json:"dir"`
+	Outdir         string   `json:"outdir"`
+	ScriptDir      string   `json:"scriptDir"`
+	ExcludeClasses []string `json:"excludeClasses"`
+}
+
 type Step struct {
 	BuildCommands *BuildCommandsStep `json:"buildCommands"`
 	CollectClass  *CollectClassStep  `json:"collectClass"`
+	GraphGen      *GraphGenStep      `json:"graphGen"`
 }
 
 type Plan struct {

@@ -3,6 +3,7 @@ package plan
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/bmeg/lathe/builder"
@@ -12,6 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func stringIn(s []string, c string) bool {
+	for _, i := range s {
+		if i == c {
+			return true
+		}
+	}
+	return false
+}
+
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
 	Use:   "plan <plan file>",
@@ -19,7 +29,11 @@ var Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pln := plan.Plan{}
-		plan.ParseFile(args[0], &pln)
+		err := plan.ParseFile(args[0], &pln)
+		if err != nil {
+			log.Printf("Error: %s", err)
+			return err
+		}
 
 		abDir, _ := filepath.Abs(args[0])
 		baseDir := filepath.Dir(abDir)
@@ -76,11 +90,34 @@ var Cmd = &cobra.Command{
 					Inputs:  inputs,
 				}
 				steps = append(steps, s)
-			}
+			} else if step.GraphGen != nil {
+				sDir := filepath.Join(baseDir, step.GraphGen.Dir)
+				outdir, _ := filepath.Rel(sDir, filepath.Join(baseDir, step.GraphGen.Outdir))
 
+				steps := util.ScanObjectToGraph(sDir, baseDir, outdir)
+
+				for _, s := range steps {
+					fObjects := []util.ObjectConvertStep{}
+					for _, o := range s.Objects {
+						if !stringIn(step.GraphGen.ExcludeClasses, o.Class) {
+							fObjects = append(fObjects, o)
+						}
+					}
+					s.Objects = fObjects
+					plan, _ := s.GenPlan()
+					planFile := filepath.Join(baseDir, step.GraphGen.ScriptDir, fmt.Sprintf("%s.yaml", s.Name))
+					log.Printf("Graph Plan: %s", planFile)
+					if file, err := os.Create(planFile); err == nil {
+						file.Write(plan)
+						file.Close()
+					} else {
+						log.Printf("%s\n", err)
+					}
+				}
+			}
 		}
 
-		err := builder.RenderSnakefile(steps, baseDir)
+		err = builder.RenderSnakefile(steps, baseDir)
 		if err != nil {
 			log.Printf("%s\n", err)
 		}
