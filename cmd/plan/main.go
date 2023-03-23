@@ -94,7 +94,7 @@ var Cmd = &cobra.Command{
 				sDir := filepath.Join(baseDir, step.GraphGen.Dir)
 				outdir, _ := filepath.Rel(sDir, filepath.Join(baseDir, step.GraphGen.Outdir))
 
-				steps := util.ScanObjectToGraph(sDir, baseDir, outdir)
+				steps := util.ScanObjectToGraph(sDir, filepath.Join(baseDir, step.GraphGen.ScriptDir), outdir)
 
 				for _, s := range steps {
 					fObjects := []util.ObjectConvertStep{}
