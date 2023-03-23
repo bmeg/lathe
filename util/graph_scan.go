@@ -75,7 +75,7 @@ func ScanObjectToGraph(startDir string, baseDir string, outdir string) []GraphBu
 							scriptDir := filepath.Dir(path)
 							task := task.NewTask(pb.Name, scriptDir, baseDir, pb.GetDefaultOutDir(), localInputs)
 
-							gb := GraphBuildStep{Name: pb.Name, Objects: []ObjectConvertStep{}, Outdir: outdir}
+							gb := GraphBuildStep{Name: fmt.Sprintf("graphbuild_%s", pb.Name), Objects: []ObjectConvertStep{}, Outdir: outdir}
 
 							for pname, p := range pb.Pipelines {
 								emitName := ""
