@@ -80,6 +80,7 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 									Command: fmt.Sprintf("sifter run %s", cmdPath),
 									Inputs:  inputs,
 									Outputs: outputs,
+									MemMB:   pb.MemMB,
 								})
 							}
 						}
