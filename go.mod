@@ -2,11 +2,13 @@ module github.com/bmeg/lathe
 
 go 1.18
 
+//replace github.com/bmeg/sifter v0.0.0-20230419180427-a0fb26867d4a => /Users/ellrott/workspaces/sifter
+
 require (
 	github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65
-	github.com/bmeg/sifter v0.0.0-20230419180427-a0fb26867d4a
+	github.com/bmeg/sifter v0.0.0-20230424183015-48e4308231e6
 	github.com/cockroachdb/pebble v0.0.0-20220311224846-910ce60578df
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
