@@ -90,22 +90,33 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 							scanStats.LatheParseCount++
 							for i, sc := range pl.GetScripts() {
 								inputs := []string{}
+								inputNames := []string{}
 								outputs := []string{}
-								scriptInputs := sc.GetInputs()
-								inputs = append(inputs, scriptInputs...)
+								outputNames := []string{}
 
-								scriptOutputs := sc.GetOutputs()
-								outputs = append(outputs, scriptOutputs...)
+								for k, v := range sc.GetInputs() {
+									inputs = append(inputs, v)
+									inputNames = append(inputNames, k)
+								}
+
+								for k, v := range sc.GetOutputs() {
+									outputs = append(outputs, v)
+									outputNames = append(outputNames, k)
+								}
 
 								sName := uniqueName(fmt.Sprintf("%s_%s", pl.Name, i), names)
 								names = append(names, sName)
 								steps = append(steps, Step{
-									Name:    sName,
-									Command: sc.GetCommand(),
-									Inputs:  inputs,
-									Outputs: outputs,
-									Workdir: sc.GetWorkdir(),
-									MemMB:   sc.MemMB,
+									Name:         sName,
+									Command:      sc.GetCommand(),
+									Inputs:       inputs,
+									InputNames:   inputNames,
+									Outputs:      outputs,
+									OutputNames:  outputNames,
+									Workdir:      sc.GetWorkdir(),
+									MemMB:        sc.MemMB,
+									ScatterName:  sc.GetScatterName(),
+									ScatterCount: sc.GetScatterCount(),
 								})
 							}
 							for i, concat := range pl.GetCollections() {

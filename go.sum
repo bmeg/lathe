@@ -89,6 +89,8 @@ github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a h1:DQ8UtR1lygLcZjnMQzVY
 github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a/go.mod h1:XA9wVP0ORyATjjwdbwkjq/yaimsnreixGUR62sGMWsY=
 github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07 h1:CQ+ZJC/N/DlVfLYpjqrmHMFwAon3Y5edEE7xN6fGH6Y=
 github.com/bmeg/goatee v0.0.0-20220707060644-2bd682625e07/go.mod h1:aeFGjQ6I6Qs/IDK2Khu9Eu/iNmKxWudKHBcU19oGNYc=
+github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018 h1:5lNDXubpauN6OFmxTopTQPjcg1DD9NhQssHQ/SHU8WA=
+github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018/go.mod h1:ud83eHZfWlln3nGHivWMFw/dh3vvypU6cEGyp09ICtE=
 github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 h1:zg0pjw8ZUufzIo7iEr0811OZ1UkcjEL8579AdUL8ISU=
 github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50/go.mod h1:hoSeuZtqe58ANXHuWpeODx4bDHGV36QXlCs1yrUvK6M=
 github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 h1:ngj395aMDI4GZaN77fwjtr1jdFf/3fwg8vNabskFpSw=

@@ -45,12 +45,14 @@ var Cmd = &cobra.Command{
 
 		for _, step := range pln.Steps {
 			if step.BuildCommands != nil {
+				// For a buildCommands step, we scan the directory, looking for sifter and lathe files to add commands to the Snakemake
 				sDir := filepath.Join(baseDir, step.BuildCommands.Dir)
 				t, err := builder.BuildScan(sDir, baseDir, []string{}, userInputs, &scanStats)
 				if err == nil {
 					steps = append(steps, t...)
 				}
 			} else if step.CollectClass != nil {
+				// For a collectClass command, we collect all outputs of a class type and concat them into a single file
 				inDir := filepath.Join(baseDir, step.CollectClass.Dir)
 
 				inputs := []string{}
@@ -91,6 +93,8 @@ var Cmd = &cobra.Command{
 				}
 				steps = append(steps, s)
 			} else if step.GraphGen != nil {
+				// For a graphgen step we scan a directory, looking for all object outputs, and build steps to create graph
+				// objects
 				sDir := filepath.Join(baseDir, step.GraphGen.Dir)
 				outdir, _ := filepath.Rel(sDir, filepath.Join(baseDir, step.GraphGen.Outdir))
 
