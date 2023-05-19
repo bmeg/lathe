@@ -14,6 +14,8 @@ import (
 	"github.com/bmeg/lathe/cmd/plan_graph"
 	"github.com/bmeg/lathe/cmd/plan_list"
 	"github.com/bmeg/lathe/cmd/prep"
+	"github.com/bmeg/lathe/cmd/prep_manifest"
+	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/schema_add"
 	"github.com/bmeg/lathe/cmd/schema_create"
 	"github.com/bmeg/lathe/cmd/schema_graph"
@@ -32,6 +34,8 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(plan.Cmd)
 	RootCmd.AddCommand(prep.Cmd)
+	RootCmd.AddCommand(prep_manifest.Cmd)
+	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
 	RootCmd.AddCommand(schema_create.Cmd)
 	RootCmd.AddCommand(schema_lint.Cmd)

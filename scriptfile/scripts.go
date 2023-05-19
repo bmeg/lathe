@@ -4,14 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/bmeg/goatee"
-
-	"github.com/google/shlex"
 )
 
 type Script struct {
@@ -37,8 +32,14 @@ type ScatterGather struct {
 }
 
 type PrepStage struct {
-	IfMissing   string `json:"ifMissing"`
-	CommandLine string `json:"commandLine"`
+	CommandLine string            `json:"commandLine"`
+	Inputs      map[string]string `json:"inputs"`
+	Outputs     map[string]string `json:"outputs"`
+
+	DownloadDate string `json:"downloadDate"`
+	Path         string `json:"path"`
+	Source       string `json:"source"`
+	path         string
 }
 
 type Template struct {
@@ -61,9 +62,10 @@ type FileRecord struct {
 type ScriptFile struct {
 	Class         string                    `json:"class"`
 	Name          string                    `json:"name"`
+	MakeDirs      []string                  `json:"makeDirs"`
 	Scripts       map[string]*Script        `json:"scripts"`
 	Templates     map[string]*Template      `json:"templates"`
-	Prep          []PrepStage               `json:"prep"`
+	Prep          []*PrepStage              `json:"prep"`
 	Collections   []CollectData             `json:"collections"`
 	Files         []FileRecord              `json:"files"`
 	ScatterGather map[string]*ScatterGather `json:"scatterGather"`
@@ -79,46 +81,6 @@ func (pl *ScriptFile) GetScripts() map[string]*Script {
 		out[k] = v
 	}
 	return out
-}
-
-func exists(filename string) bool {
-	_, err := os.Stat(filename)
-	return !os.IsNotExist(err)
-}
-
-func (pl *ScriptFile) DoPrep() error {
-	planPath, _ := filepath.Abs(pl.path)
-	planDir := filepath.Dir(planPath)
-	for _, s := range pl.Prep {
-		log.Printf("Running script %s", s)
-
-		if s.IfMissing == "" || !exists(filepath.Join(planDir, s.IfMissing)) {
-			err := pl.runScript(s.CommandLine)
-			if err != nil {
-				log.Printf("Scripting error: %s", err)
-				return err
-			}
-		} else {
-			log.Printf("Skipping prep because file %s exists", s.IfMissing)
-		}
-	}
-	return nil
-
-}
-
-func (pl *ScriptFile) runScript(command string) error {
-	planPath, _ := filepath.Abs(pl.path)
-	workdir := filepath.Dir(planPath)
-	cmdLine, err := shlex.Split(command)
-	if err != nil {
-		return err
-	}
-	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
-	cmd.Dir = workdir
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
-	log.Printf("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
-	return cmd.Run()
 }
 
 func (sc *Script) GetCommand() string {

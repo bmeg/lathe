@@ -45,6 +45,10 @@ func ParseFile(relpath string, conf *ScriptFile) error {
 		v.path = path
 	}
 
+	for _, v := range conf.Prep {
+		v.path = path
+	}
+
 	for i := range conf.Collections {
 		conf.Collections[i].path = path
 	}
