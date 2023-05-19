@@ -117,6 +117,7 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 									MemMB:        sc.MemMB,
 									ScatterName:  sc.GetScatterName(),
 									ScatterCount: sc.GetScatterCount(),
+									ScriptType:   sc.GetScriptType(),
 								})
 							}
 							for i, concat := range pl.GetCollections() {

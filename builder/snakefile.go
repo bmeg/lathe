@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/bmeg/lathe/scriptfile"
 )
 
 type Step struct {
@@ -20,6 +22,7 @@ type Step struct {
 	MemMB        int
 	ScatterName  string
 	ScatterCount int
+	ScriptType   int
 }
 
 var snakeFile string = `
@@ -92,7 +95,9 @@ func RenderSnakefile(steps []Step, baseDir string) error {
 	outputs := map[string]int{}
 	for _, s := range steps {
 		for _, f := range s.Outputs {
-			outputs[f] = 0
+			if s.ScriptType != scriptfile.ScatterScript {
+				outputs[f] = 0
+			}
 		}
 	}
 
@@ -119,14 +124,14 @@ func RenderSnakefile(steps []Step, baseDir string) error {
 
 	for i := range steps {
 		for j := range steps[i].Inputs {
-			if steps[i].ScatterName == "" {
+			if steps[i].ScriptType == scriptfile.SifterScript || steps[i].ScriptType == scriptfile.ScatterScript {
 				inPath, _ := filepath.Abs(steps[i].Inputs[j])
 				if k, err := filepath.Rel(baseDir, inPath); err == nil {
 					steps[i].Inputs[j] = fmt.Sprintf(`"%s"`, k)
 				} else {
 					log.Printf("rel error for input %s: %s", steps[i].Name, err)
 				}
-			} else {
+			} else if steps[i].ScriptType == scriptfile.GatherScript {
 				if scatterGather == nil {
 					scatterGather = map[string]string{}
 				}

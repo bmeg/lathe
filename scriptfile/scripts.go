@@ -9,6 +9,12 @@ import (
 	"github.com/bmeg/goatee"
 )
 
+const (
+	SifterScript  int = 0
+	ScatterScript int = 1
+	GatherScript  int = 2
+)
+
 type Script struct {
 	CommandLine  string            `json:"commandLine"`
 	Inputs       map[string]string `json:"inputs"`
@@ -20,6 +26,7 @@ type Script struct {
 	name         string
 	scatterName  string
 	scatterCount int
+	scriptType   int
 }
 
 type ScatterGather struct {
@@ -29,6 +36,7 @@ type ScatterGather struct {
 	MemMB       int    `json:"memMB"`
 	Shards      int    `json:"shards"`
 	ShardPath   string `json:"shardPath"`
+	Script      string `json:"script"`
 }
 
 type PrepStage struct {
@@ -140,6 +148,10 @@ func (sc *Script) GetWorkdir() string {
 	return filepath.Dir(f)
 }
 
+func (sc *Script) GetScriptType() int {
+	return sc.scriptType
+}
+
 func (sc *Script) GetScatterName() string {
 	return sc.scatterName
 }
@@ -204,11 +216,14 @@ func (pl *ScriptFile) GenerateTemplateScripts() map[string]*Script {
 func (pl *ScriptFile) GenerateScatterGatherScripts() map[string]*Script {
 	out := map[string]*Script{}
 
+	scriptPath, _ := filepath.Abs(pl.path)
+	scriptDir := filepath.Dir(scriptPath)
 	for k, v := range pl.ScatterGather {
 		scatterName := fmt.Sprintf("%s_%s_scatter", pl.Name, k)
 
-		scatterCmdLine, err := goatee.Render(v.CommandLine,
+		scatterCmdLine, err := goatee.RenderString(v.CommandLine,
 			map[string]any{
+				"script":  filepath.Join(scriptDir, v.Script),
 				"threads": "{threads}",
 				"input":   "{input}",
 				"shard":   "{wildcards.shard}",
@@ -221,18 +236,19 @@ func (pl *ScriptFile) GenerateScatterGatherScripts() map[string]*Script {
 
 		shardPrefix := "./shards/"
 		if v.ShardPath != "" {
-			s, err := goatee.Render(v.ShardPath, map[string]any{"shard": "{shard}"})
+			s, err := goatee.RenderString(v.ShardPath, map[string]any{"shard": "{shard}"})
 			if err == nil {
-				v.ShardPath = s.(string)
+				v.ShardPath = s
 			}
 		}
 		shardOutputName := fmt.Sprintf("%s{shard}-of-{total}", shardPrefix)
 		scatterScript := &Script{
-			CommandLine: scatterCmdLine.(string),
+			CommandLine: scatterCmdLine,
 			Inputs:      map[string]string{"input": v.Input},
 			Outputs:     map[string]string{"output": shardOutputName},
 			MemMB:       v.MemMB,
 			path:        pl.path,
+			scriptType:  ScatterScript,
 			//Workdir     string   `json:"workdir"`
 			//Order       int      `json:"order"`
 		}
@@ -246,6 +262,7 @@ func (pl *ScriptFile) GenerateScatterGatherScripts() map[string]*Script {
 			path:         pl.path,
 			scatterName:  fmt.Sprintf("%s_%s", pl.Name, k),
 			scatterCount: v.Shards,
+			scriptType:   GatherScript,
 			//Workdir     string   `json:"workdir"`
 			//Order       int      `json:"order"`
 		}
