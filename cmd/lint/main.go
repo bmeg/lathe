@@ -77,6 +77,8 @@ var Cmd = &cobra.Command{
 							if pl.Name == "" {
 								log.Printf("lathe file %s missing name", path)
 							}
+						} else {
+							log.Printf("%s", latheErr)
 						}
 					}
 				}

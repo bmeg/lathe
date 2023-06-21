@@ -7,27 +7,41 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/bmeg/lathe/scriptfile"
 )
 
 type Step struct {
-	Name    string
-	Command string
-	Inputs  []string
-	Outputs []string
-	Workdir string
-	MemMB   int
+	Name         string
+	Command      string
+	Inputs       []string
+	Outputs      []string
+	InputNames   []string
+	OutputNames  []string
+	Workdir      string
+	MemMB        int
+	ScatterName  string
+	ScatterCount int
+	ScriptType   int
 }
 
 var snakeFile string = `
+{{- if .ScatterGather }}
+scattergather:
+{{- range $name, $count := .ScatterGather }}
+	{{$name}}={{$count}}
+{{end -}}
+{{end -}}
 
-{{range .}}
+{{range .Steps}}
 rule {{.Name}}:
+{{- $saveStep := . -}}
 {{- if .Inputs }}
 	input:
 		{{range $index, $file := .Inputs -}}
 		{{- if $index }},
 		{{ end -}}
-		"{{- $file -}}"
+		{{- if $saveStep.InputNames }}{{ index $saveStep.InputNames $index}}= {{end}}{{- $file -}}
 		{{- end}}
 {{- end}}
 {{- if .Outputs }}
@@ -35,7 +49,7 @@ rule {{.Name}}:
 		{{range $index, $file := .Outputs -}}
 		{{- if $index }},
 		{{ end -}}
-		"{{- $file -}}"
+		{{- if $saveStep.OutputNames }}{{ index $saveStep.OutputNames $index}}= {{end}}{{- $file -}}
 		{{- end}}
 {{- end}}
 {{- if .MemMB }}
@@ -44,12 +58,13 @@ rule {{.Name}}:
 {{- end}}
 {{- if .Command }}
 	shell:
-		"{{if .Workdir}}cd {{.Workdir}} && {{end}}{{.Command}}"
+		"{{.Command}}"
 {{- end}}
 {{end}}
-
-
 `
+
+// currently ignoring workdir
+// 		"{{if .Workdir}}cd {{.Workdir}} && {{end}}{{.Command}}"
 
 func contains(n string, c []string) bool {
 	for _, c := range c {
@@ -80,7 +95,9 @@ func RenderSnakefile(steps []Step, baseDir string) error {
 	outputs := map[string]int{}
 	for _, s := range steps {
 		for _, f := range s.Outputs {
-			outputs[f] = 0
+			if s.ScriptType != scriptfile.ScatterScript {
+				outputs[f] = 0
+			}
 		}
 	}
 
@@ -103,18 +120,32 @@ func RenderSnakefile(steps []Step, baseDir string) error {
 	}
 	steps = append([]Step{allStep}, steps...)
 
+	var scatterGather map[string]string
+
 	for i := range steps {
 		for j := range steps[i].Inputs {
-			inPath, _ := filepath.Abs(steps[i].Inputs[j])
-			if k, err := filepath.Rel(baseDir, inPath); err == nil {
-				steps[i].Inputs[j] = k
-			} else {
-				log.Printf("rel error for input %s: %s", steps[i].Name, err)
+			if steps[i].ScriptType == scriptfile.SifterScript || steps[i].ScriptType == scriptfile.ScatterScript {
+				inPath, _ := filepath.Abs(steps[i].Inputs[j])
+				if k, err := filepath.Rel(baseDir, inPath); err == nil {
+					steps[i].Inputs[j] = fmt.Sprintf(`"%s"`, k)
+				} else {
+					log.Printf("rel error for input %s: %s", steps[i].Name, err)
+				}
+			} else if steps[i].ScriptType == scriptfile.GatherScript {
+				if scatterGather == nil {
+					scatterGather = map[string]string{}
+				}
+				inPath, _ := filepath.Abs(steps[i].Inputs[0])
+				if k, err := filepath.Rel(baseDir, inPath); err == nil {
+					steps[i].Inputs[0] = fmt.Sprintf(`gather.%s("%s")`, steps[i].ScatterName, k)
+				}
+				scatterGather[steps[i].ScatterName] = fmt.Sprintf("%d", steps[i].ScatterCount)
+				//add scattergather directive
 			}
 		}
 		for j := range steps[i].Outputs {
 			if k, err := filepath.Rel(baseDir, steps[i].Outputs[j]); err == nil {
-				steps[i].Outputs[j] = k
+				steps[i].Outputs[j] = fmt.Sprintf(`"%s"`, k)
 			}
 		}
 		if steps[i].Workdir != "" {
@@ -133,6 +164,6 @@ func RenderSnakefile(steps []Step, baseDir string) error {
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(outfile, steps)
+	err = tmpl.Execute(outfile, map[string]any{"ScatterGather": scatterGather, "Steps": steps})
 	return err
 }
