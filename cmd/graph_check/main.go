@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -27,6 +28,7 @@ type output struct {
 
 var nLoaderThreads int = 4
 var nGenThreads int = 4
+var outFile string = ""
 
 var vPrefix string = "v"
 var tPrefix string = "t"
@@ -140,6 +142,7 @@ var Cmd = &cobra.Command{
 			vertexID string
 			edgeFrom string
 			edgeTo   string
+			source   string
 		}
 		logInput := make(chan logData, 10)
 		dbInput := make(chan dbEntry, 100)
@@ -152,11 +155,11 @@ var Cmd = &cobra.Command{
 					if err == nil {
 						for _, e := range elems {
 							if e.Vertex != nil {
-								dbInput <- dbEntry{vertexID: e.Vertex.Gid}
+								dbInput <- dbEntry{vertexID: e.Vertex.Gid, source: gen.path}
 							} else if e.InEdge != nil {
-								dbInput <- dbEntry{edgeFrom: e.InEdge.From, edgeTo: e.InEdge.To}
+								dbInput <- dbEntry{edgeFrom: e.InEdge.From, edgeTo: e.InEdge.To, source: gen.path}
 							} else if e.OutEdge != nil {
-								dbInput <- dbEntry{edgeFrom: e.OutEdge.From, edgeTo: e.OutEdge.To}
+								dbInput <- dbEntry{edgeFrom: e.OutEdge.From, edgeTo: e.OutEdge.To, source: gen.path}
 							}
 						}
 					} else {
@@ -197,21 +200,30 @@ var Cmd = &cobra.Command{
 				pbw.Set([]byte(k), []byte{})
 			} else {
 				k1 := tPrefix + d.edgeTo
-				pbw.Set([]byte(k1), []byte{})
+				pbw.Set([]byte(k1), []byte(d.source))
 				k2 := fPrefix + d.edgeFrom
-				pbw.Set([]byte(k2), []byte{})
+				pbw.Set([]byte(k2), []byte(d.source))
 			}
 			//fmt.Printf("%d\n", pbw.curSize)
 		}
 		pbw.Close()
 
+		errFile := os.Stdout
+		if outFile != "" {
+			o, err := os.Create(outFile)
+			if err != nil {
+				return err
+			}
+			errFile = o
+		}
+
 		it := db.NewIter(&pebble.IterOptions{LowerBound: []byte(tPrefix)})
 		for it.First(); it.Valid() && bytes.HasPrefix(it.Key(), []byte(tPrefix)); it.Next() {
 			k := it.Key()
 			k[0] = 'v'
-			_, cl, err := db.Get(k)
+			s, cl, err := db.Get(k)
 			if err != nil {
-				log.Printf("Vertex %s not found", k[1:])
+				errFile.Write([]byte(fmt.Sprintf("From %s: Vertex %s not found\n", string(s), k[1:])))
 			} else {
 				cl.Close()
 			}
@@ -221,9 +233,9 @@ var Cmd = &cobra.Command{
 		for it.First(); it.Valid() && bytes.HasPrefix(it.Key(), []byte(fPrefix)); it.Next() {
 			k := it.Key()
 			k[0] = 'v'
-			_, cl, err := db.Get(k)
+			s, cl, err := db.Get(k)
 			if err != nil {
-				log.Printf("Vertex %s not found", k[1:])
+				errFile.Write([]byte(fmt.Sprintf("From %s: Vertex %s not found\n", string(s), k[1:])))
 			} else {
 				cl.Close()
 			}
@@ -238,4 +250,5 @@ var Cmd = &cobra.Command{
 func init() {
 	flags := Cmd.Flags()
 	flags.IntVarP(&nGenThreads, "nworkers", "n", nGenThreads, "Number of workers")
+	flags.StringVarP(&outFile, "output", "o", outFile, "Output file")
 }
