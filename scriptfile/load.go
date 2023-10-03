@@ -2,7 +2,7 @@ package scriptfile
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"sigs.k8s.io/yaml"
@@ -27,7 +27,7 @@ func ParseFile(relpath string, conf *ScriptFile) error {
 	}
 
 	// Read file
-	source, err := ioutil.ReadFile(path)
+	source, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to read config at path %s: \n%v", path, err)
 	}

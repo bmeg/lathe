@@ -15,6 +15,19 @@ import (
 func (pl *ScriptFile) DoPrep() error {
 	planPath, _ := filepath.Abs(pl.path)
 	planDir := filepath.Dir(planPath)
+
+	for _, d := range pl.DockerImages {
+		cmdLine := []string{"docker", "build", "-t", d.Name, d.Dir}
+		log.Printf("Docker Build: %s", cmdLine)
+
+		cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
+		cmd.Dir = planDir
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+		log.Printf("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
+		cmd.Run()
+	}
+
 	for _, s := range pl.Prep {
 		if s.CommandLine != "" {
 			doRun := true

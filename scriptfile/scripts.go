@@ -15,7 +15,12 @@ const (
 	GatherScript  int = 2
 )
 
+type DockerImage struct {
+	Image string `json:"image"`
+}
+
 type Script struct {
+	Docker       *DockerImage
 	CommandLine  string            `json:"commandLine"`
 	Inputs       map[string]string `json:"inputs"`
 	Outputs      map[string]string `json:"outputs"`
@@ -67,9 +72,15 @@ type FileRecord struct {
 	Path         string `json:"path"`
 }
 
+type DockerImageBuild struct {
+	Name string `json:"name"`
+	Dir  string `json:"dir"`
+}
+
 type ScriptFile struct {
 	Class         string                    `json:"class"`
 	Name          string                    `json:"name"`
+	DockerImages  []DockerImageBuild        `json:"dockerImages"`
 	MakeDirs      []string                  `json:"makeDirs"`
 	Scripts       map[string]*Script        `json:"scripts"`
 	Templates     map[string]*Template      `json:"templates"`
