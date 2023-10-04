@@ -20,6 +20,7 @@ type Step struct {
 	OutputNames  []string
 	Workdir      string
 	MemMB        int
+	Container    string
 	ScatterName  string
 	ScatterCount int
 	ScriptType   int
@@ -55,6 +56,10 @@ rule {{.Name}}:
 {{- if .MemMB }}
 	resources:
 		mem_mb={{ .MemMB }}
+{{- end}}
+{{- if .Container }}
+	container:
+		"{{.Container}}"
 {{- end}}
 {{- if .Command }}
 	shell:

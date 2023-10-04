@@ -106,7 +106,7 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 
 								sName := uniqueName(fmt.Sprintf("%s_%s", pl.Name, i), names)
 								names = append(names, sName)
-								steps = append(steps, Step{
+								newStep := Step{
 									Name:         sName,
 									Command:      sc.GetCommand(),
 									Inputs:       inputs,
@@ -118,7 +118,11 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 									ScatterName:  sc.GetScatterName(),
 									ScatterCount: sc.GetScatterCount(),
 									ScriptType:   sc.GetScriptType(),
-								})
+								}
+								if sc.Docker != nil {
+									newStep.Container = "docker://" + sc.Docker.Image
+								}
+								steps = append(steps, newStep)
 							}
 							for i, concat := range pl.GetCollections() {
 								fmt.Printf("Collection: %s %d\n", concat.GetOutputPath(), i)
