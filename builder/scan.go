@@ -3,11 +3,12 @@ package builder
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/bmeg/goatee"
 	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/lathe/util"
 	"github.com/bmeg/sifter/playbook"
@@ -106,9 +107,19 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 
 								sName := uniqueName(fmt.Sprintf("%s_%s", pl.Name, i), names)
 								names = append(names, sName)
+
+								paths := map[string]string{}
+								for k, v := range sc.GetPaths() {
+									paths[k], _ = filepath.Rel(baseDir, v)
+								}
+
+								command, _ := goatee.RenderString(sc.GetCommand(), map[string]any{
+									"paths": paths,
+								})
+
 								newStep := Step{
 									Name:         sName,
-									Command:      sc.GetCommand(),
+									Command:      command,
 									Inputs:       inputs,
 									InputNames:   inputNames,
 									Outputs:      outputs,
@@ -169,7 +180,7 @@ func BuildScan(dir string, baseDir string, exclude []string, userInputs map[stri
 
 							}
 						} else {
-							source, _ := ioutil.ReadFile(path)
+							source, _ := os.ReadFile(path)
 							d := map[string]any{}
 							yaml.Unmarshal(source, &d)
 							if cl, ok := d["class"]; ok {

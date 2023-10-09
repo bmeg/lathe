@@ -72,6 +72,7 @@ var Cmd = &cobra.Command{
 							log.Printf("Error parsing sifter file: %s", err)
 						}
 					} else if yamlClass == "lathe" {
+						log.Printf("Scanning Lathe file: %s", path)
 						pl := scriptfile.ScriptFile{}
 						if latheErr := scriptfile.ParseFile(path, &pl); latheErr == nil {
 							if pl.Name == "" {

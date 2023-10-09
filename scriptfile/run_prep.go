@@ -63,18 +63,9 @@ func (pl *ScriptFile) DoPrep() error {
 }
 
 func (sc *PrepStage) GetCommand() (string, error) {
-	inputs := map[string]string{}
-	outputs := map[string]string{}
-
-	for k, v := range sc.GetInputs() {
-		inputs[k] = v
-	}
-	for k, v := range sc.GetOutputs() {
-		outputs[k] = v
-	}
 
 	command, err := goatee.RenderString(sc.CommandLine, map[string]any{
-		"inputs": inputs, "outputs": outputs,
+		"inputs": sc.GetInputs(), "outputs": sc.GetOutputs(), "paths": sc.GetPaths(),
 	})
 
 	return command, err
@@ -117,6 +108,16 @@ func (sc *PrepStage) GetInputs() map[string]string {
 func (sc *PrepStage) GetOutputs() map[string]string {
 	o := map[string]string{}
 	for k, p := range sc.Outputs {
+		path := filepath.Join(filepath.Dir(sc.path), p)
+		npath, _ := filepath.Abs(path)
+		o[k] = npath
+	}
+	return o
+}
+
+func (sc *PrepStage) GetPaths() map[string]string {
+	o := map[string]string{}
+	for k, p := range sc.Paths {
 		path := filepath.Join(filepath.Dir(sc.path), p)
 		npath, _ := filepath.Abs(path)
 		o[k] = npath

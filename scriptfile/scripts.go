@@ -24,6 +24,7 @@ type Script struct {
 	CommandLine  string            `json:"commandLine"`
 	Inputs       map[string]string `json:"inputs"`
 	Outputs      map[string]string `json:"outputs"`
+	Paths        map[string]string `json:"paths"`
 	Workdir      string            `json:"workdir"`
 	Order        int               `json:"order"`
 	MemMB        int               `json:"memMB"`
@@ -48,6 +49,7 @@ type PrepStage struct {
 	CommandLine string            `json:"commandLine"`
 	Inputs      map[string]string `json:"inputs"`
 	Outputs     map[string]string `json:"outputs"`
+	Paths       map[string]string `json:"paths"`
 
 	DownloadDate string `json:"downloadDate"`
 	Path         string `json:"path"`
@@ -105,14 +107,18 @@ func (pl *ScriptFile) GetScripts() map[string]*Script {
 func (sc *Script) GetCommand() string {
 	inputs := map[string]string{}
 	outputs := map[string]string{}
+	paths := map[string]string{}
 	for k := range sc.Inputs {
 		inputs[k] = fmt.Sprintf("{input.%s}", k)
 	}
 	for k := range sc.Outputs {
 		outputs[k] = fmt.Sprintf("{output.%s}", k)
 	}
+	for k := range sc.Paths {
+		paths[k] = fmt.Sprintf("{{paths.%s}}", k)
+	}
 	cmd, _ := goatee.RenderString(sc.CommandLine, map[string]any{
-		"inputs": inputs, "outputs": outputs,
+		"inputs": inputs, "outputs": outputs, "paths": paths,
 	})
 	return cmd
 }
@@ -146,6 +152,18 @@ func (sc *Script) GetOutputs() map[string]string {
 
 	o := map[string]string{}
 	for k, p := range sc.Outputs {
+		path := filepath.Join(filepath.Dir(sc.path), p)
+		npath, _ := filepath.Abs(path)
+		fmt.Printf("output: %s\n", npath)
+		o[k] = npath
+	}
+	return o
+}
+
+func (sc *Script) GetPaths() map[string]string {
+
+	o := map[string]string{}
+	for k, p := range sc.Paths {
 		path := filepath.Join(filepath.Dir(sc.path), p)
 		npath, _ := filepath.Abs(path)
 		fmt.Printf("output: %s\n", npath)
