@@ -12,6 +12,7 @@ import (
 
 	"github.com/bmeg/sifter/schema"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )

@@ -12,7 +12,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20220311224846-910ce60578df
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/minio/minio-go/v7 v7.0.52
-	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.3.0
