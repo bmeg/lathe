@@ -105,3 +105,5 @@ require (
 	k8s.io/apimachinery v0.20.6 // indirect
 	vitess.io/vitess v0.15.2 // indirect
 )
+
+replace github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 => github.com/bmeg/jsonschema/v5 v5.3.3
