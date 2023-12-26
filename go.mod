@@ -3,6 +3,7 @@ module github.com/bmeg/lathe
 go 1.18
 
 //replace github.com/bmeg/sifter  v0.0.0-20230424183015-48e4308231e6 => /Users/ellrott/workspaces/sifter
+replace github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a => /Users/ellrott/workspaces/flame
 
 require (
 	github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018
@@ -16,6 +17,13 @@ require (
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.3.0
+)
+
+require (
+	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
+	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
+	github.com/rogpeppe/go-internal v1.6.1 // indirect
 )
 
 require (
@@ -35,6 +43,7 @@ require (
 	github.com/dgraph-io/badger/v2 v2.0.1 // indirect
 	github.com/dgraph-io/ristretto v0.0.0-20191025175511-c1f00be0418e // indirect
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
+	github.com/dop251/goja v0.0.0-20231027120936-b396bb4c349d
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -59,7 +68,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linkedin/goavro/v2 v2.10.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190428105938-cea283e61946 // indirect
@@ -82,6 +91,7 @@ require (
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rs/xid v1.4.0 // indirect
+	github.com/scipipe/scipipe v0.12.0
 	github.com/segmentio/ksuid v1.0.2 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

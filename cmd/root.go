@@ -16,6 +16,7 @@ import (
 	"github.com/bmeg/lathe/cmd/prep"
 	"github.com/bmeg/lathe/cmd/prep_manifest"
 	"github.com/bmeg/lathe/cmd/prep_upload"
+	"github.com/bmeg/lathe/cmd/run"
 	"github.com/bmeg/lathe/cmd/schema_add"
 	"github.com/bmeg/lathe/cmd/schema_create"
 	"github.com/bmeg/lathe/cmd/schema_graph"
@@ -49,6 +50,7 @@ func init() {
 	RootCmd.AddCommand(class_concat.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
 	RootCmd.AddCommand(graph_build.Cmd)
+	RootCmd.AddCommand(run.Cmd)
 
 }
 
