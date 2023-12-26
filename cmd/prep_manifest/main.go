@@ -20,7 +20,7 @@ var exclude = []string{}
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
 	Use:   "prep-manifest",
-	Short: "Run prep scripts before a build",
+	Short: "Build manifest of all files that are needed before run",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -31,6 +31,9 @@ var Cmd = &cobra.Command{
 		sources := []manifest.ScriptRecord{}
 
 		changeDir, _ = filepath.Abs(changeDir)
+
+		totalFiles := 0
+		totalSize := uint64(0)
 
 		for _, dir := range args {
 			startDir, _ := filepath.Abs(dir)
@@ -64,12 +67,16 @@ var Cmd = &cobra.Command{
 													sha1val, _ := util.QuickSHA1(f)
 													relPath, _ := filepath.Rel(changeDir, f)
 													sourceFiles = append(sourceFiles, manifest.FileRecord{Path: relPath, Size: util.FileSize(f), QuickSHA1: sha1val})
+													totalFiles++
+													totalSize += util.FileSize(f)
 												}
 											} else {
 												//fmt.Printf("Found: %s: %s %d\n", o, dst, util.FileSize(dst))
 												sha1val, _ := util.QuickSHA1(dst)
 												relPath, _ := filepath.Rel(changeDir, dst)
 												sourceFiles = append(sourceFiles, manifest.FileRecord{Path: relPath, Size: util.FileSize(dst), QuickSHA1: sha1val})
+												totalFiles++
+												totalSize += util.FileSize(dst)
 											}
 										} else {
 											//fmt.Printf("Missing: %s: %s\n", o, dst)
@@ -90,7 +97,7 @@ var Cmd = &cobra.Command{
 				})
 		}
 
-		m := manifest.Manifest{Sources: sources}
+		m := manifest.Manifest{Sources: sources, Summary: manifest.SummaryRecord{TotalSize: totalSize, FileCount: totalFiles}}
 
 		out, _ := yaml.Marshal(m)
 
