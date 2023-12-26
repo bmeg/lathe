@@ -11,6 +11,12 @@ type ScriptRecord struct {
 	Files []FileRecord `json:"files"`
 }
 
+type SummaryRecord struct {
+	FileCount int    `json:"fileCount"`
+	TotalSize uint64 `json:"totalSize"`
+}
+
 type Manifest struct {
+	Summary SummaryRecord  `json:"summary"`
 	Sources []ScriptRecord `json:"sources"`
 }
