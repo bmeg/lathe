@@ -1,8 +1,11 @@
 package run
 
-import "os"
+import (
+	"errors"
+	"os"
+)
 
 func PathExists(path string) bool {
 	_, err := os.Stat(path)
-	return err != os.ErrNotExist
+	return !errors.Is(err, os.ErrNotExist)
 }

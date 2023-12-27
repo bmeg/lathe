@@ -9,11 +9,13 @@ import (
 )
 
 type ProcessDesc struct {
-	Desc map[string]any
-	//Dependencies []*ProcessDesc
+	Name        string
+	Desc        map[string]any
 	CommandLine string
 	Inputs      map[string]string
 	Outputs     map[string]string
+	MemMB       uint
+	NCpus       uint
 }
 
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
@@ -53,10 +55,35 @@ func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 		}
 	}
 
+	out.MemMB = 1024
+	if memMb, ok := data["memMB"]; ok {
+		if memMbInt, ok := memMb.(int); ok {
+			out.MemMB = uint(memMbInt)
+		} else if memMbInt, ok := memMb.(int64); ok {
+			out.MemMB = uint(memMbInt)
+		}
+	}
+
+	out.NCpus = 1
+	if ncpus, ok := data["ncpus"]; ok {
+		if ncpusInt, ok := ncpus.(int); ok {
+			out.NCpus = uint(ncpusInt)
+		} else if ncpusInt, ok := ncpus.(int64); ok {
+			out.NCpus = uint(ncpusInt)
+		}
+	}
+
+	if name, ok := data["name"]; ok {
+		if nameStr, ok := name.(string); ok {
+			out.Name = nameStr
+		}
+	}
+
 	return out
 }
 
 type WorkflowDesc struct {
+	Name      string
 	Processes []*ProcessDesc
 }
 
@@ -66,7 +93,9 @@ type WorkflowDesc struct {
 //}
 
 func (wd *WorkflowDesc) Add(x *ProcessDesc) {
-	//fmt.Printf("Add: %s\n", x)
+	if x.Name == "" {
+		x.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Processes))
+	}
 	wd.Processes = append(wd.Processes, x)
 }
 
@@ -74,7 +103,7 @@ func (pl *Plan) Workflow(name string) *WorkflowDesc {
 	if pl.Verbose {
 		fmt.Printf("Workflow\n")
 	}
-	w := &WorkflowDesc{}
+	w := &WorkflowDesc{Name: name}
 	pl.Workflows[name] = w
 	return w
 }
