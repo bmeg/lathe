@@ -3,7 +3,7 @@ module github.com/bmeg/lathe
 go 1.18
 
 //replace github.com/bmeg/sifter  v0.0.0-20230424183015-48e4308231e6 => /Users/ellrott/workspaces/sifter
-replace github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a => /Users/ellrott/workspaces/flame
+//replace github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a => /Users/ellrott/workspaces/flame
 
 require (
 	github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018
@@ -29,10 +29,10 @@ require (
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
-	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
+	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible
 	github.com/basgys/goxml2json v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a // indirect
+	github.com/bmeg/flame v0.0.0-20231228021014-450efb0021a6
 	github.com/bmeg/jsonpath v0.0.0-20210207014051-cca5355553ad // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -91,7 +91,6 @@ require (
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rs/xid v1.4.0 // indirect
-	github.com/scipipe/scipipe v0.12.0
 	github.com/segmentio/ksuid v1.0.2 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

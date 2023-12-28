@@ -85,8 +85,10 @@ github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
-github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a h1:DQ8UtR1lygLcZjnMQzVYUNs9p+/0QwXxc5csx2VeAvA=
-github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a/go.mod h1:XA9wVP0ORyATjjwdbwkjq/yaimsnreixGUR62sGMWsY=
+github.com/bmeg/flame v0.0.0-20231228003020-c9b56e05ee5e h1:Z86QoIbV5HFSBIgENBC4Hr9/ewKLkCbd89X83zkDePE=
+github.com/bmeg/flame v0.0.0-20231228003020-c9b56e05ee5e/go.mod h1:XA9wVP0ORyATjjwdbwkjq/yaimsnreixGUR62sGMWsY=
+github.com/bmeg/flame v0.0.0-20231228021014-450efb0021a6 h1:7cacs+zs6d9oP0ylXMrmb6PlH8773WEnj/yohQRZkiA=
+github.com/bmeg/flame v0.0.0-20231228021014-450efb0021a6/go.mod h1:XA9wVP0ORyATjjwdbwkjq/yaimsnreixGUR62sGMWsY=
 github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018 h1:5lNDXubpauN6OFmxTopTQPjcg1DD9NhQssHQ/SHU8WA=
 github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018/go.mod h1:ud83eHZfWlln3nGHivWMFw/dh3vvypU6cEGyp09ICtE=
 github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50 h1:zg0pjw8ZUufzIo7iEr0811OZ1UkcjEL8579AdUL8ISU=
@@ -697,8 +699,6 @@ github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/ryanuber/columnize v2.1.0+incompatible/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/ryanuber/go-glob v0.0.0-20170128012129-256dc444b735/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
-github.com/scipipe/scipipe v0.12.0 h1:gMAYBG8phk4Ryr/+l1yhJu+e5549Qwp/1AJzJzdvbMA=
-github.com/scipipe/scipipe v0.12.0/go.mod h1:Nwof+Uimtam7GTpkU6cAf/EOnqvxcOVFytjnYU5I3vY=
 github.com/sclevine/agouti v3.0.0+incompatible/go.mod h1:b4WX9W9L1sfQKXeJf1mUTLZKJ48R1S7H23Ji7oFO5Bw=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/securego/gosec v0.0.0-20191002120514-e680875ea14d/go.mod h1:w5+eXa0mYznDkHaMCXA4XYffjlH+cy1oyKbfzJXa2Do=

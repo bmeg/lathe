@@ -139,7 +139,7 @@ func RunFile(path string) (map[string]*WorkflowDesc, error) {
 		"mode": "prep",
 	})
 	vm.Set("Workflow", pl.Workflow)
-	vm.Set("Print", pl.Print)
+	vm.Set("print", pl.Print)
 
 	_, err = vm.RunScript("main", string(source))
 	if err != nil {
