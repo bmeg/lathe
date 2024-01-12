@@ -9,10 +9,11 @@ import (
 	"sync"
 
 	"github.com/bmeg/golib"
+	jsgraph "github.com/bmeg/jsonschemagraph/util"
 	"github.com/bmeg/lathe/util"
 	"github.com/bmeg/sifter/evaluate"
 	"github.com/bmeg/sifter/playbook"
-	"github.com/bmeg/sifter/schema"
+
 	"github.com/bmeg/sifter/task"
 	"github.com/spf13/cobra"
 
@@ -87,7 +88,7 @@ var Cmd = &cobra.Command{
 		}()
 
 		type genData struct {
-			schema *schema.GraphSchema
+			schema *jsgraph.GraphSchema
 			class  string
 			data   map[string]any
 			path   string
@@ -101,7 +102,7 @@ var Cmd = &cobra.Command{
 			go func() {
 				for o := range loaderInput {
 					fmt.Printf("Scaning %s %s %s\n", o.Schema, o.Class, o.Path)
-					if sch, err := schema.Load(o.Schema); err == nil {
+					if sch, err := jsgraph.Load(o.Schema); err == nil {
 						reader, err := golib.ReadGzipLines(o.Path)
 						if err == nil {
 							lineNum := 0
@@ -148,7 +149,8 @@ var Cmd = &cobra.Command{
 			genWG.Add(1)
 			go func() {
 				for gen := range genInput {
-					elems, err := gen.schema.Generate(gen.class, gen.data, true)
+					var schema jsgraph.GraphSchema
+					elems, err := schema.Generate(gen.class, gen.data, true)
 					if err == nil {
 						for _, e := range elems {
 							if e.Vertex != nil {

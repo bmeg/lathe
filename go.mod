@@ -8,6 +8,7 @@ require (
 	github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
 	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65
+	github.com/bmeg/jsonschemagraph v0.0.0-20231130184725-4c439ca30b96
 	github.com/bmeg/sifter v0.0.0-20230424184727-f9af6ef30a1e
 	github.com/cockroachdb/pebble v0.0.0-20220311224846-910ce60578df
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -59,7 +60,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linkedin/goavro/v2 v2.10.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190428105938-cea283e61946 // indirect
@@ -99,7 +100,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20210701191553-46259e63a0a9 // indirect
 	google.golang.org/grpc v1.45.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/DataDog/dd-trace-go.v1 v1.17.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	k8s.io/apimachinery v0.20.6 // indirect
