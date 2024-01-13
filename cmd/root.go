@@ -5,11 +5,6 @@ import (
 
 	"github.com/bmeg/lathe/cmd/graph_build"
 	"github.com/bmeg/lathe/cmd/graph_check"
-	"github.com/bmeg/lathe/cmd/lint"
-	"github.com/bmeg/lathe/cmd/plan_graph"
-	"github.com/bmeg/lathe/cmd/plan_list"
-	"github.com/bmeg/lathe/cmd/prep"
-	"github.com/bmeg/lathe/cmd/prep_manifest"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
 
@@ -24,12 +19,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(prep.Cmd)
-	RootCmd.AddCommand(prep_manifest.Cmd)
 	RootCmd.AddCommand(prep_upload.Cmd)
-	RootCmd.AddCommand(lint.Cmd)
-	RootCmd.AddCommand(plan_graph.Cmd)
-	RootCmd.AddCommand(plan_list.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
 	RootCmd.AddCommand(graph_build.Cmd)
 	RootCmd.AddCommand(run.Cmd)

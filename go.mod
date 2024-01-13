@@ -6,21 +6,18 @@ go 1.18
 //replace github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a => /Users/ellrott/workspaces/flame
 
 require (
-	github.com/bmeg/goatee v0.0.0-20230512220900-46542ca09018
 	github.com/bmeg/golib v0.0.0-20200725231742-008a48f99f50
-	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65
 	github.com/bmeg/sifter v0.0.0-20230424184727-f9af6ef30a1e
 	github.com/cockroachdb/pebble v0.0.0-20220311224846-910ce60578df
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/minio/minio-go/v7 v7.0.52
 	github.com/ohsu-comp-bio/funnel v0.0.0-20231108002452-c9c84e3a42b1
-	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.4.0
-	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
+	github.com/bmeg/grip v0.0.0-20210910231938-94d69d94ff65 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a // indirect
@@ -28,6 +25,8 @@ require (
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
