@@ -2,10 +2,10 @@ package workflow
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
 )
 
@@ -77,8 +77,8 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 			output.Status = STATUS_OK
 		} else {
 			if !dryRun {
-				fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
-				toolCmd := CommandLineTool{
+				//fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
+				toolCmd := runner.CommandLineTool{
 					CommandLine: cmdLine,
 					BaseDir:     ws.BaseDir,
 					MemMB:       ws.Desc.MemMB,

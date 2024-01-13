@@ -1,4 +1,4 @@
-package workflow
+package runner
 
 import (
 	"fmt"
@@ -65,7 +65,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	var cpuAlloc *PoolAllocation
 	var memAlloc *PoolAllocation
 
-	fmt.Printf("Allocating CPU: %d RAM: %d\n", cmdTool.NCpus, cmdTool.MemMB)
+	fmt.Printf("Requesting CPU: %d RAM: %d\n", cmdTool.NCpus, cmdTool.MemMB)
 	for {
 		loopMutex := &sync.Mutex{}
 		cpuAlloc, err = sc.cpuPool.Allocate(cmdTool.NCpus)
@@ -94,6 +94,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	*/
 	defer cpuAlloc.Return()
 	defer memAlloc.Return()
+	fmt.Printf("Executing: %#vs", cmdLine)
 	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
 	cmd.Dir = workdir
 	cmd.Stdout = os.Stderr

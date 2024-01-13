@@ -3,24 +3,15 @@ package cmd
 import (
 	"os"
 
-	"github.com/bmeg/lathe/cmd/class_concat"
-	"github.com/bmeg/lathe/cmd/class_find"
-	"github.com/bmeg/lathe/cmd/class_list"
-	"github.com/bmeg/lathe/cmd/data_validate"
 	"github.com/bmeg/lathe/cmd/graph_build"
 	"github.com/bmeg/lathe/cmd/graph_check"
 	"github.com/bmeg/lathe/cmd/lint"
-	"github.com/bmeg/lathe/cmd/plan"
 	"github.com/bmeg/lathe/cmd/plan_graph"
 	"github.com/bmeg/lathe/cmd/plan_list"
 	"github.com/bmeg/lathe/cmd/prep"
 	"github.com/bmeg/lathe/cmd/prep_manifest"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
-	"github.com/bmeg/lathe/cmd/schema_add"
-	"github.com/bmeg/lathe/cmd/schema_create"
-	"github.com/bmeg/lathe/cmd/schema_graph"
-	"github.com/bmeg/lathe/cmd/schema_lint"
 
 	"github.com/spf13/cobra"
 )
@@ -33,21 +24,12 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(plan.Cmd)
 	RootCmd.AddCommand(prep.Cmd)
 	RootCmd.AddCommand(prep_manifest.Cmd)
 	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
-	RootCmd.AddCommand(schema_create.Cmd)
-	RootCmd.AddCommand(schema_lint.Cmd)
-	RootCmd.AddCommand(schema_add.Cmd)
-	RootCmd.AddCommand(schema_graph.Cmd)
-	RootCmd.AddCommand(data_validate.Cmd)
 	RootCmd.AddCommand(plan_graph.Cmd)
 	RootCmd.AddCommand(plan_list.Cmd)
-	RootCmd.AddCommand(class_list.Cmd)
-	RootCmd.AddCommand(class_find.Cmd)
-	RootCmd.AddCommand(class_concat.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
 	RootCmd.AddCommand(graph_build.Cmd)
 	RootCmd.AddCommand(run.Cmd)

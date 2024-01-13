@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
 )
 
@@ -40,7 +41,7 @@ type Workflow struct {
 	Steps  map[string]WorkflowStep
 	DepMap map[string][]string
 
-	Runner CommandRunner
+	Runner runner.CommandRunner
 }
 
 func (w *Workflow) AddStep(ws WorkflowStep) error {
@@ -67,7 +68,11 @@ func (w *Workflow) AddDepends(step WorkflowStep, dep WorkflowStep) error {
 
 func PrepWorkflow(wd *scriptfile.WorkflowDesc) (*Workflow, error) {
 	fmt.Printf("Building Workflow DAG\n")
-	wf := &Workflow{Steps: map[string]WorkflowStep{}, DepMap: make(map[string][]string), Runner: NewSingleMachineRunner(16, 32000)}
+	wf := &Workflow{
+		Steps:  map[string]WorkflowStep{},
+		DepMap: make(map[string][]string),
+		Runner: runner.NewSingleMachineRunner(16, 32000),
+	}
 
 	//map inputs and outputs
 	inFileMap := map[string]WorkflowStep{}
