@@ -3,7 +3,6 @@ package cmd
 import (
 	"os"
 
-	"github.com/bmeg/lathe/cmd/graph_build"
 	"github.com/bmeg/lathe/cmd/graph_check"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
@@ -21,7 +20,6 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
-	RootCmd.AddCommand(graph_build.Cmd)
 	RootCmd.AddCommand(run.Cmd)
 
 }
