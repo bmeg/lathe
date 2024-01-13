@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
@@ -44,9 +45,12 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	}
 	output := &WorkflowStatus{DryRun: dryRun}
 	outputsFound := 0
+	notFound := []string{}
 	for _, o := range ws.GetOutputs() {
 		if PathExists(o.Abs()) {
 			outputsFound++
+		} else {
+			notFound = append(notFound, o.RelPath)
 		}
 	}
 
@@ -73,7 +77,7 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 			output.Status = STATUS_OK
 		} else {
 			if !dryRun {
-				fmt.Printf("Running command: %s\n", cmdLine)
+				fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
 				toolCmd := CommandLineTool{
 					CommandLine: cmdLine,
 					BaseDir:     ws.BaseDir,

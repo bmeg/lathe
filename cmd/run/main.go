@@ -23,7 +23,7 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		baseDir := filepath.Dir(scriptPath)
+		//baseDir := filepath.Dir(scriptPath)
 		names := []string{}
 		if len(args) > 1 {
 			names = args[1:]
@@ -43,7 +43,7 @@ var Cmd = &cobra.Command{
 		} else {
 			for _, n := range names {
 				if wfd, ok := workflows[n]; ok {
-					wf, err := workflow.PrepWorkflow(baseDir, wfd)
+					wf, err := workflow.PrepWorkflow(wfd)
 					if err == nil {
 						//fmt.Printf("Running Workflow: %#v\n", wf)
 						fwf, err := wf.BuildFlame()
@@ -53,7 +53,7 @@ var Cmd = &cobra.Command{
 						fmt.Printf("%#v\n", fwf)
 
 						go func() {
-							fwf.ProcessIn <- &workflow.WorkflowStatus{Name: "run", DryRun: true}
+							fwf.ProcessIn <- &workflow.WorkflowStatus{Name: "run", DryRun: dryRun}
 							close(fwf.ProcessIn)
 						}()
 

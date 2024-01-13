@@ -26,6 +26,10 @@ type DataFile struct {
 }
 
 func (df *DataFile) Abs() string {
+	if filepath.IsAbs(df.RelPath) {
+		fmt.Printf("Is abs: %s\n", df.RelPath)
+		return df.RelPath
+	}
 	s, _ := filepath.Abs(filepath.Join(df.BaseDir, df.RelPath))
 	return s
 }
@@ -61,15 +65,15 @@ func (w *Workflow) AddDepends(step WorkflowStep, dep WorkflowStep) error {
 
 /*****/
 
-func PrepWorkflow(basedir string, wd *scriptfile.WorkflowDesc) (*Workflow, error) {
-
+func PrepWorkflow(wd *scriptfile.WorkflowDesc) (*Workflow, error) {
+	fmt.Printf("Building Workflow DAG\n")
 	wf := &Workflow{Steps: map[string]WorkflowStep{}, DepMap: make(map[string][]string), Runner: NewSingleMachineRunner(16, 32000)}
 
 	//map inputs and outputs
 	inFileMap := map[string]WorkflowStep{}
 	outFileMap := map[string]WorkflowStep{}
 	for _, p := range wd.Processes {
-		ws := NewWorkflowProcess(wf, basedir, p)
+		ws := NewWorkflowProcess(wf, p.BasePath, p)
 		if err := wf.AddStep(ws); err != nil {
 			fmt.Printf("error: %s\n", err)
 		}
@@ -81,46 +85,30 @@ func PrepWorkflow(basedir string, wd *scriptfile.WorkflowDesc) (*Workflow, error
 		}
 	}
 
+	//fmt.Printf("InfileMap: %#v\n", inFileMap)
+	//fmt.Printf("OutfileMap: %#v\n", outFileMap)
+
 	//connect inputs to existing outputs
+	fileSteps := map[string]WorkflowStep{}
 	for _, p := range wf.Steps {
 		for _, path := range p.GetInputs() {
 			if inS, ok := outFileMap[path.Abs()]; ok {
 				wf.AddDepends(p, inS)
-			}
-		}
-	}
-
-	//Identify input that map to existing files
-	fileSteps := map[string]WorkflowStep{}
-	for i, p := range wf.Steps {
-		ready := true
-		curInputs := wf.DepMap[p.GetName()]
-		if len(curInputs) != len(p.GetInputs()) {
-			for k, v := range p.GetInputs() {
-				if _, ok := wf.DepMap[k]; !ok {
-					inPath := v.Abs()
-					if PathExists(inPath) {
-						//fmt.Printf("Found %s\n", inPath)
-						file := v
-						fileSteps[v.Abs()] = &WorkflowFileCheck{file}
-					} else {
-						fmt.Printf("Missing %s: %s\n", k, v)
-						ready = false
+			} else {
+				fmt.Printf("File Check: %s\n", path.Abs())
+				inPath := path.Abs()
+				if x, ok := fileSteps[inPath]; ok {
+					wf.AddDepends(p, x)
+				} else {
+					lPath := path
+					s := &WorkflowFileCheck{lPath}
+					fileSteps[inPath] = s
+					if err := wf.AddStep(s); err != nil {
+						fmt.Printf("error: %s\n", err)
 					}
+					wf.AddDepends(p, s)
 				}
 			}
-		}
-		if ready {
-			//fmt.Printf("Ready: %#v\t%#v\n", stepInputs[workflowSteps[i]], stepOutputs[workflowSteps[i]])
-		} else {
-			//fmt.Printf("Not Ready: %#v\t%#v\n", stepInputs[workflowSteps[i]], stepOutputs[workflowSteps[i]])
-			fmt.Printf("Cannot find inputs for step: %s\n", i)
-		}
-	}
-
-	for _, s := range fileSteps {
-		if err := wf.AddStep(s); err != nil {
-			fmt.Printf("error: %s\n", err)
 		}
 	}
 
@@ -133,12 +121,16 @@ type FlameWorkflow struct {
 }
 
 func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
+	fmt.Printf("Converting DAG to op-flow\n")
 	out := flame.NewWorkflow()
 
 	nodeMap := map[WorkflowStep]flame.Emitter[flame.KeyValue[string, *WorkflowStatus]]{}
 
+	//create root node of DAG
 	workChan := make(chan *WorkflowStatus, 10)
 	startNode := flame.AddSourceChan(out, workChan)
+
+	//Connect elements that can run immediately with no dependencies to the root node
 	for _, v := range wf.Steps {
 		if v.IsGenerator() {
 			curV := v
@@ -151,11 +143,13 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 		}
 	}
 
+	//Connect steps where all dependencies have been added to the DAG
+	//repeat until no new steps can be added
 	for found := true; found; {
 		found = false
 		for _, v := range wf.Steps {
 			if _, ok := nodeMap[v]; !ok {
-				fmt.Printf("Checking Step: %s\n", v.GetName())
+				//fmt.Printf("Checking Step: %s\n", v.GetName())
 				inNodes := []flame.Emitter[flame.KeyValue[string, *WorkflowStatus]]{}
 				for _, dep := range wf.DepMap[v.GetName()] {
 					depStep := wf.Steps[dep]
@@ -164,7 +158,7 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 					}
 				}
 				if len(inNodes) == len(wf.DepMap[v.GetName()]) {
-					fmt.Printf("Adding Step: %s depends: %s\n", v.GetName(), strings.Join(wf.DepMap[v.GetName()], ","))
+					fmt.Printf("Adding Step: %s (%s) depends: (%s) %#v\n", v.GetName(), v.GetDesc(), strings.Join(wf.DepMap[v.GetName()], ","), v.GetInputs())
 
 					curV := v
 					//fmt.Printf("Found dependancy: %s\n", curV.GetDesc())
