@@ -29,7 +29,7 @@ type DataFile struct {
 
 func (df *DataFile) Abs() string {
 	if filepath.IsAbs(df.RelPath) {
-		log.Printf("Is abs: %s\n", df.RelPath)
+		log.Printf("is abs: %s\n", df.RelPath)
 		return df.RelPath
 	}
 	s, _ := filepath.Abs(filepath.Join(df.BaseDir, df.RelPath))
@@ -78,16 +78,30 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc) (*Workflow, error) {
 	//map inputs and outputs
 	inFileMap := map[string]WorkflowStep{}
 	outFileMap := map[string]WorkflowStep{}
-	for _, p := range wd.Processes {
-		ws := NewWorkflowProcess(wf, p.BasePath, p)
-		if err := wf.AddStep(ws); err != nil {
-			log.Printf("error: %s\n", err)
-		}
-		for _, path := range ws.GetInputs() {
-			inFileMap[path.Abs()] = ws
-		}
-		for _, path := range ws.GetOutputs() {
-			outFileMap[path.Abs()] = ws
+	for _, p := range wd.Steps {
+		if proc := p.GetProcess(); proc != nil {
+			ws := NewWorkflowProcess(wf, p.GetBasePath(), proc)
+			if err := wf.AddStep(ws); err != nil {
+				log.Printf("error: %s\n", err)
+			}
+			for _, path := range ws.GetInputs() {
+				inFileMap[path.Abs()] = ws
+			}
+			for _, path := range ws.GetOutputs() {
+				outFileMap[path.Abs()] = ws
+			}
+		} else {
+			//TODO: None-processes
+			for _, path := range p.GetInputs() {
+				d := DataFile{
+					BaseDir: filepath.Dir(p.GetBasePath()),
+					RelPath: path,
+				}
+				s := &WorkflowFileCheck{d}
+				if err := wf.AddStep(s); err != nil {
+					log.Printf("error: %s\n", err)
+				}
+			}
 		}
 	}
 
@@ -122,8 +136,9 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc) (*Workflow, error) {
 }
 
 type FlameWorkflow struct {
-	Workflow  *flame.Workflow
-	ProcessIn chan *WorkflowStatus
+	Workflow   *flame.Workflow
+	ProcessIn  chan *WorkflowStatus
+	ProcessOut chan *WorkflowStatus
 }
 
 func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
@@ -146,6 +161,25 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 			})
 			m.Connect(startNode)
 			nodeMap[v] = m
+		}
+	}
+
+	//file steps with nothing dependent on them
+	hasDeps := map[string]bool{}
+	for _, v := range wf.Steps {
+		for _, d := range wf.DepMap[v.GetName()] {
+			hasDeps[d] = true
+		}
+	}
+	for _, v := range wf.Steps {
+		if _, ok := hasDeps[v.GetName()]; !ok {
+			log.Printf("No dependents: %s\n", v.GetName())
+		} else {
+			if len(wf.DepMap[v.GetName()]) == 0 {
+				log.Printf("No dependents: %s\n", v.GetName())
+			} else {
+				log.Printf("Has dependents: %s\n", v.GetName())
+			}
 		}
 	}
 

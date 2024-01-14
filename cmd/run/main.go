@@ -56,6 +56,13 @@ var Cmd = &cobra.Command{
 							close(fwf.ProcessIn)
 						}()
 
+						/*
+							go func() {
+								for i := range fwf.ProcessOut {
+									fmt.Printf("%#v\n", i)
+								}
+							}()
+						*/
 						fwf.Workflow.Start()
 						fwf.Workflow.Wait()
 

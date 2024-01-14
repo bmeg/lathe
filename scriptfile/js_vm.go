@@ -33,6 +33,7 @@ func RunFile(path string) (map[string]*WorkflowDesc, error) {
 		"Workflow": pl.Workflow,
 		"LoadPlan": pl.LoadPlan,
 		"Process":  pl.Process,
+		"File":     pl.File,
 		"Plugin":   pl.Plugin,
 	}
 

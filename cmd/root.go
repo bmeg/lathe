@@ -23,7 +23,6 @@ func init() {
 	RootCmd.AddCommand(graph_check.Cmd)
 	RootCmd.AddCommand(inputs.Cmd)
 	RootCmd.AddCommand(run.Cmd)
-
 }
 
 var genBashCompletionCmd = &cobra.Command{

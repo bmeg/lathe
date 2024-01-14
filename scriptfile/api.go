@@ -12,15 +12,16 @@ import (
 	"github.com/google/shlex"
 )
 
-type ProcessDesc struct {
-	BasePath    string
-	Name        string
-	Desc        map[string]any
-	CommandLine string
-	Inputs      map[string]string
-	Outputs     map[string]string
-	MemMB       uint
-	NCpus       uint
+type Step interface {
+	GetName() string
+	GetBasePath() string
+	GetInputs() map[string]string
+	GetProcess() *ProcessDesc
+}
+
+type File struct {
+	BasePath string
+	Path     string
 }
 
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
@@ -87,9 +88,21 @@ func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 	return out
 }
 
+func (pl *Plan) File(data map[string]any) *File {
+	if path, ok := data["path"]; ok {
+		if pathStr, ok := path.(string); ok {
+			return &File{
+				Path:     pathStr,
+				BasePath: pl.Path,
+			}
+		}
+	}
+	return nil
+}
+
 type WorkflowDesc struct {
-	Name      string
-	Processes []*ProcessDesc
+	Name  string
+	Steps []Step
 }
 
 //func (pd *ProcessDesc) Depends(p *ProcessDesc) {
@@ -105,11 +118,14 @@ func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
 	e := call.Arguments[0].Export()
 	if proc, ok := e.(*ProcessDesc); ok {
 		if proc.Name == "" {
-			proc.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Processes))
+			proc.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Steps))
 		}
-		wd.Processes = append(wd.Processes, proc)
+		wd.Steps = append(wd.Steps, proc)
 	} else if wf, ok := e.(*WorkflowDesc); ok {
-		wd.Processes = append(wd.Processes, wf.Processes...)
+		wd.Steps = append(wd.Steps, wf.Steps...)
+	} else if file, ok := e.(*File); ok {
+		log.Printf("Adding file check:%#vs\n", file)
+		wd.Steps = append(wd.Steps, &FileCheck{File: file})
 	} else {
 		log.Printf("Unknown object: %#v\n", e)
 	}

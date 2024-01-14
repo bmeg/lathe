@@ -59,11 +59,11 @@ var List = &cobra.Command{
 
 		if wf, ok := workflows[wfName]; ok {
 			if outJson {
-				for _, p := range wf.Processes {
-					for k, v := range p.Inputs {
-						path := filepath.Join(p.BasePath, v)
+				for _, p := range wf.Steps {
+					for k, v := range p.GetInputs() {
+						path := filepath.Join(p.GetBasePath(), v)
 						data := map[string]any{
-							"step": p.Name,
+							"step": p.GetName(),
 							"name": k,
 							"path": path,
 						}
@@ -75,9 +75,9 @@ var List = &cobra.Command{
 				}
 			} else {
 				paths := map[string]bool{}
-				for _, p := range wf.Processes {
-					for _, v := range p.Inputs {
-						path := filepath.Join(p.BasePath, v)
+				for _, p := range wf.Steps {
+					for _, v := range p.GetInputs() {
+						path := filepath.Join(p.GetBasePath(), v)
 						paths[path] = true
 					}
 				}
