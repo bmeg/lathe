@@ -7,6 +7,7 @@ import (
 	"github.com/bmeg/lathe/cmd/inputs"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
+	"github.com/bmeg/lathe/cmd/viz"
 
 	"github.com/spf13/cobra"
 )
@@ -23,6 +24,7 @@ func init() {
 	RootCmd.AddCommand(graph_check.Cmd)
 	RootCmd.AddCommand(inputs.Cmd)
 	RootCmd.AddCommand(run.Cmd)
+	RootCmd.AddCommand(viz.Cmd)
 }
 
 var genBashCompletionCmd = &cobra.Command{
