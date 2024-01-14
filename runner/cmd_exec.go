@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -65,7 +64,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	var cpuAlloc *PoolAllocation
 	var memAlloc *PoolAllocation
 
-	fmt.Printf("Requesting CPU: %d RAM: %d\n", cmdTool.NCpus, cmdTool.MemMB)
+	log.Printf("Requesting CPU: %d RAM: %d\n", cmdTool.NCpus, cmdTool.MemMB)
 	for {
 		loopMutex := &sync.Mutex{}
 		cpuAlloc, err = sc.cpuPool.Allocate(cmdTool.NCpus)
@@ -86,15 +85,15 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	}
 	/*
 		sc.memPool.mutext.Lock()
-		fmt.Printf("Ram alloced total: %d %#v\n", len(sc.memPool.allocations), sc.memPool.allocations)
+		log.Printf("Ram alloced total: %d %#v\n", len(sc.memPool.allocations), sc.memPool.allocations)
 		for _, d := range sc.memPool.allocations {
-			fmt.Printf("\t%d\n", d.size)
+			log.Printf("\t%d\n", d.size)
 		}
 		sc.memPool.mutext.Unlock()
 	*/
 	defer cpuAlloc.Return()
 	defer memAlloc.Return()
-	fmt.Printf("Executing: %#vs", cmdLine)
+	log.Printf("Executing: %#vs", cmdLine)
 	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
 	cmd.Dir = workdir
 	cmd.Stdout = os.Stderr

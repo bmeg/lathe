@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
@@ -32,11 +33,11 @@ func NewWorkflowProcess(wf *Workflow, baseDir string, desc *scriptfile.ProcessDe
 }
 
 func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.KeyValue[string, *WorkflowStatus] {
-	fmt.Printf("Process %s\n", ws.Desc.Name)
+	log.Printf("Process %s\n", ws.Desc.Name)
 	dryRun := false
 	for _, i := range status {
 		if i.Status != STATUS_OK {
-			fmt.Printf("Received upstream FAIL, skipping: %s", ws.Desc.Name)
+			log.Printf("Received upstream FAIL, skipping: %s", ws.Desc.Name)
 			return flame.KeyValue[string, *WorkflowStatus]{Key: key, Value: i}
 		}
 		if i.DryRun {
@@ -73,7 +74,7 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	cmdLine, err := raymond.Render(ws.Desc.CommandLine, cmdParams)
 	if err == nil {
 		if outputsFound == len(ws.GetOutputs()) {
-			fmt.Printf("Skipping command (%d of %d outputs found): %s\n", outputsFound, len(ws.GetOutputs()), cmdLine)
+			log.Printf("Skipping command (%d of %d outputs found): %s\n", outputsFound, len(ws.GetOutputs()), cmdLine)
 			output.Status = STATUS_OK
 		} else {
 			if !dryRun {
@@ -91,12 +92,12 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 					output.Status = STATUS_FAIL
 				}
 			} else {
-				fmt.Printf("Would run command: %s %#v\n", cmdLine, cmdParams)
+				log.Printf("Would run command: %s %#v\n", cmdLine, cmdParams)
 				output.Status = STATUS_OK
 			}
 		}
 	} else {
-		fmt.Printf("Template error: %s\n", err)
+		log.Printf("Template error: %s\n", err)
 		output.Status = STATUS_FAIL
 	}
 	return flame.KeyValue[string, *WorkflowStatus]{Key: key, Value: output}

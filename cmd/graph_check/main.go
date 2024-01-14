@@ -100,7 +100,7 @@ var Cmd = &cobra.Command{
 			loaderWG.Add(1)
 			go func() {
 				for o := range loaderInput {
-					fmt.Printf("Scaning %s %s %s\n", o.Schema, o.Class, o.Path)
+					log.Printf("Scaning %s %s %s\n", o.Schema, o.Class, o.Path)
 					if sch, err := schema.Load(o.Schema); err == nil {
 						reader, err := golib.ReadGzipLines(o.Path)
 						if err == nil {
@@ -201,7 +201,7 @@ var Cmd = &cobra.Command{
 				k2 := fPrefix + d.edgeFrom
 				pbw.Set([]byte(k2), []byte{})
 			}
-			//fmt.Printf("%d\n", pbw.curSize)
+			//log.Printf("%d\n", pbw.curSize)
 		}
 		pbw.Close()
 

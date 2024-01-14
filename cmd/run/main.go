@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
@@ -39,7 +38,7 @@ var Cmd = &cobra.Command{
 			for k := range workflows {
 				wNames = append(wNames, k)
 			}
-			fmt.Printf("workflows: %s\n", strings.Join(wNames, ", "))
+			log.Printf("workflows: %s\n", strings.Join(wNames, ", "))
 		} else {
 			for _, n := range names {
 				if wfd, ok := workflows[n]; ok {
@@ -48,9 +47,9 @@ var Cmd = &cobra.Command{
 						//fmt.Printf("Running Workflow: %#v\n", wf)
 						fwf, err := wf.BuildFlame()
 						if err != nil {
-							fmt.Printf("workflow build error: %s\n", err)
+							log.Printf("workflow build error: %s\n", err)
 						}
-						fmt.Printf("%#v\n", fwf)
+						//fmt.Printf("%#v\n", fwf)
 
 						go func() {
 							fwf.ProcessIn <- &workflow.WorkflowStatus{Name: "run", DryRun: dryRun}
@@ -60,10 +59,10 @@ var Cmd = &cobra.Command{
 						fwf.Workflow.Start()
 						fwf.Workflow.Wait()
 
-						fmt.Printf("Workflow Done\n")
+						log.Printf("Workflow Done\n")
 					}
 				} else {
-					fmt.Printf("Workflow %s not found\n", n)
+					log.Printf("Workflow %s not found\n", n)
 				}
 			}
 		}

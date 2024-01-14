@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 	"path/filepath"
 
@@ -24,7 +25,7 @@ type ProcessDesc struct {
 
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 	if pl.Verbose {
-		fmt.Printf("Process: %#v\n", data)
+		log.Printf("Process: %#v\n", data)
 	}
 	out := &ProcessDesc{BasePath: filepath.Dir(pl.Path)}
 
@@ -110,14 +111,14 @@ func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
 	} else if wf, ok := e.(*WorkflowDesc); ok {
 		wd.Processes = append(wd.Processes, wf.Processes...)
 	} else {
-		fmt.Printf("Unknown object: %#v\n", e)
+		log.Printf("Unknown object: %#v\n", e)
 	}
 	return nil
 }
 
 func (pl *Plan) Workflow(name string) *WorkflowDesc {
 	if pl.Verbose {
-		fmt.Printf("Workflow\n")
+		log.Printf("Workflow\n")
 	}
 	w := &WorkflowDesc{Name: fmt.Sprintf("%s:%s", pl.Path, name)}
 	pl.Workflows[name] = w
@@ -125,11 +126,11 @@ func (pl *Plan) Workflow(name string) *WorkflowDesc {
 }
 
 func (pl *Plan) Print(x any) {
-	fmt.Printf("%s", x)
+	log.Printf("%s", x)
 }
 
 func (pl *Plan) Println(x any) {
-	fmt.Printf("%s\n", x)
+	log.Printf("%s\n", x)
 }
 
 type Plan struct {
@@ -146,11 +147,11 @@ func (pl *Plan) Glob(pattern string) []string {
 }
 
 func (pl *Plan) LoadPlan(path string) map[string]*WorkflowDesc {
-	fmt.Printf("Loading sub-workflow %s\n", path)
+	log.Printf("Loading sub-workflow %s\n", path)
 	if x, err := RunFile(path); err == nil {
 		return x
 	} else {
-		fmt.Printf("Error Loading sub-workflow %s : %s\n", path, err)
+		log.Printf("Error Loading sub-workflow %s : %s\n", path, err)
 	}
 	return map[string]*WorkflowDesc{}
 }
@@ -159,7 +160,7 @@ func (pl *Plan) Plugin(cmdLine string) goja.Value {
 
 	cmdArgs, err := shlex.Split(cmdLine)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
+		log.Printf("Error: %s\n", err)
 		return nil
 	}
 
@@ -171,7 +172,7 @@ func (pl *Plan) Plugin(cmdLine string) goja.Value {
 
 	data, err := io.ReadAll(stdout)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
+		log.Printf("Error: %s\n", err)
 	}
 
 	//fmt.Printf("Plugin output: %s\n", data)

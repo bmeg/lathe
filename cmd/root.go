@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bmeg/lathe/cmd/graph_check"
+	"github.com/bmeg/lathe/cmd/inputs"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
 
@@ -20,6 +21,7 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(graph_check.Cmd)
+	RootCmd.AddCommand(inputs.Cmd)
 	RootCmd.AddCommand(run.Cmd)
 
 }

@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bmeg/flame"
 )
@@ -23,7 +24,7 @@ func (ws *WorkflowFileCheck) Process(key string, status []*WorkflowStatus) flame
 		}
 	}
 	output := &WorkflowStatus{DryRun: dryRun}
-	fmt.Printf("Checking for file: %s\n", ws.File.Abs())
+	log.Printf("Checking for file: %s\n", ws.File.Abs())
 	if !PathExists(ws.File.Abs()) {
 		output.Status = STATUS_FAIL
 	} else {
