@@ -1,0 +1,9 @@
+- playbook:
+  - schema-lint
+  - iceberg/schemas/graph
+- playbook:
+  - schema-graph
+  - iceberg/schemas/graph
+#- playbook:
+  #- graph-check
+  #- iceberg/schemas/graph
