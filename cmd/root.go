@@ -6,7 +6,6 @@ import (
 	"github.com/bmeg/lathe/cmd/class_concat"
 	"github.com/bmeg/lathe/cmd/class_find"
 	"github.com/bmeg/lathe/cmd/class_list"
-	"github.com/bmeg/lathe/cmd/data_validate"
 	"github.com/bmeg/lathe/cmd/graph_build"
 	"github.com/bmeg/lathe/cmd/graph_check"
 	"github.com/bmeg/lathe/cmd/lint"
@@ -16,10 +15,6 @@ import (
 	"github.com/bmeg/lathe/cmd/prep"
 	"github.com/bmeg/lathe/cmd/prep_manifest"
 	"github.com/bmeg/lathe/cmd/prep_upload"
-	"github.com/bmeg/lathe/cmd/schema_add"
-	"github.com/bmeg/lathe/cmd/schema_create"
-	"github.com/bmeg/lathe/cmd/schema_graph"
-	"github.com/bmeg/lathe/cmd/schema_lint"
 
 	"github.com/spf13/cobra"
 )
@@ -37,11 +32,6 @@ func init() {
 	RootCmd.AddCommand(prep_manifest.Cmd)
 	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(lint.Cmd)
-	RootCmd.AddCommand(schema_create.Cmd)
-	RootCmd.AddCommand(schema_lint.Cmd)
-	RootCmd.AddCommand(schema_add.Cmd)
-	RootCmd.AddCommand(schema_graph.Cmd)
-	RootCmd.AddCommand(data_validate.Cmd)
 	RootCmd.AddCommand(plan_graph.Cmd)
 	RootCmd.AddCommand(plan_list.Cmd)
 	RootCmd.AddCommand(class_list.Cmd)

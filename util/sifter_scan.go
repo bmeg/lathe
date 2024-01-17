@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,8 @@ func ScanSifter(baseDir string, userFunc func(*playbook.Playbook)) {
 				pb := playbook.Playbook{}
 				if parseErr := playbook.ParseFile(path, &pb); parseErr == nil {
 					userFunc(&pb)
+				} else if parseErr != nil {
+					fmt.Println("PARSE ERRROR: ", parseErr)
 				}
 			}
 			return nil

@@ -13,7 +13,7 @@ var outdir = ""
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
-	Use:   "graph-build",
+	Use:   "graph-build <path-to-playbook(s)>",
 	Short: "process outputs of sifter file into graph elements",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

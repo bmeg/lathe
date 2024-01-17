@@ -35,7 +35,7 @@ var fPrefix string = "f"
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
-	Use:   "graph-check",
+	Use:   "graph-check <path-to-playbook(s)>",
 	Short: "process transform outputs, checking id linkages",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

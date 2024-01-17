@@ -11,7 +11,7 @@ import (
 
 // Cmd is the declaration of the command line
 var Cmd = &cobra.Command{
-	Use:   "class-list",
+	Use:   "class-list <path_to_playbook(s)>",
 	Short: "List output files with class type",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
