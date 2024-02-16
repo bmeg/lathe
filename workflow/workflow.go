@@ -67,12 +67,12 @@ func (w *Workflow) AddDepends(step WorkflowStep, dep WorkflowStep) error {
 
 /*****/
 
-func PrepWorkflow(wd *scriptfile.WorkflowDesc) (*Workflow, error) {
+func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workflow, error) {
 	log.Printf("Building Workflow DAG\n")
 	wf := &Workflow{
 		Steps:  map[string]WorkflowStep{},
 		DepMap: make(map[string][]string),
-		Runner: runner.NewSingleMachineRunner(16, 32000),
+		Runner: run,
 	}
 
 	//map inputs and outputs

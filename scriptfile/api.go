@@ -24,6 +24,14 @@ type File struct {
 	Path     string
 }
 
+type Plan struct {
+	Workflows map[string]*WorkflowDesc
+	Verbose   bool
+	Path      string
+	VM        *goja.Runtime
+	Images    []*DockerImage
+}
+
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 	if pl.Verbose {
 		log.Printf("Process: %#v\n", data)
@@ -100,38 +108,6 @@ func (pl *Plan) File(data map[string]any) *File {
 	return nil
 }
 
-type WorkflowDesc struct {
-	Name  string
-	Steps []Step
-}
-
-//func (pd *ProcessDesc) Depends(p *ProcessDesc) {
-//fmt.Printf("Adding process dependency: %#v", pd)
-//	pd.Dependencies = append(pd.Dependencies, p)
-//}
-
-func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
-	if len(call.Arguments) != 1 {
-		return nil
-	}
-	//fmt.Printf("Adding %#v\n", call.Arguments[0])
-	e := call.Arguments[0].Export()
-	if proc, ok := e.(*ProcessDesc); ok {
-		if proc.Name == "" {
-			proc.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Steps))
-		}
-		wd.Steps = append(wd.Steps, proc)
-	} else if wf, ok := e.(*WorkflowDesc); ok {
-		wd.Steps = append(wd.Steps, wf.Steps...)
-	} else if file, ok := e.(*File); ok {
-		log.Printf("Adding file check:%#vs\n", file)
-		wd.Steps = append(wd.Steps, &FileCheck{File: file})
-	} else {
-		log.Printf("Unknown object: %#v\n", e)
-	}
-	return nil
-}
-
 func (pl *Plan) Workflow(name string) *WorkflowDesc {
 	if pl.Verbose {
 		log.Printf("Workflow\n")
@@ -139,6 +115,23 @@ func (pl *Plan) Workflow(name string) *WorkflowDesc {
 	w := &WorkflowDesc{Name: fmt.Sprintf("%s:%s", pl.Path, name)}
 	pl.Workflows[name] = w
 	return w
+}
+
+func (pl *Plan) DockerImage(call goja.ConstructorCall) *goja.Object {
+	if len(call.Arguments) != 2 {
+		fmt.Printf("2 arguments required for DockerImage")
+		return nil
+	}
+
+	baseDir := call.Arguments[0]
+	tag := call.Arguments[1]
+	out := &DockerImage{
+		BaseDir: baseDir.String(),
+		Tag:     tag.String(),
+	}
+	log.Printf("Found Image %#v", out)
+	pl.Images = append(pl.Images, out)
+	return nil
 }
 
 func (pl *Plan) Print(x any) {
@@ -149,27 +142,20 @@ func (pl *Plan) Println(x any) {
 	log.Printf("%s\n", x)
 }
 
-type Plan struct {
-	Workflows map[string]*WorkflowDesc
-	Verbose   bool
-	Path      string
-	VM        *goja.Runtime
-}
-
 func (pl *Plan) Glob(pattern string) []string {
 	gp := filepath.Join(filepath.Dir(pl.Path), pattern)
 	matches, _ := filepath.Glob(gp)
 	return matches
 }
 
-func (pl *Plan) LoadPlan(path string) map[string]*WorkflowDesc {
+func (pl *Plan) LoadPlan(path string) *Plan {
 	log.Printf("Loading sub-workflow %s\n", path)
 	if x, err := RunFile(path); err == nil {
 		return x
 	} else {
 		log.Printf("Error Loading sub-workflow %s : %s\n", path, err)
 	}
-	return map[string]*WorkflowDesc{}
+	return &Plan{}
 }
 
 func (pl *Plan) Plugin(cmdLine string) goja.Value {

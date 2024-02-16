@@ -8,7 +8,7 @@ import (
 	"github.com/dop251/goja"
 )
 
-func RunFile(path string) (map[string]*WorkflowDesc, error) {
+func RunFile(path string) (*Plan, error) {
 
 	// Try to get absolute path. If it fails, fall back to relative path.
 	path, abserr := filepath.Abs(path)
@@ -24,17 +24,18 @@ func RunFile(path string) (map[string]*WorkflowDesc, error) {
 
 	vm := goja.New()
 
-	pl := &Plan{Workflows: map[string]*WorkflowDesc{}, Path: path, VM: vm}
+	pl := &Plan{Workflows: map[string]*WorkflowDesc{}, Path: path, VM: vm, Images: []*DockerImage{}}
 
 	latheObj := map[string]any{
 		"Params": map[string]string{
 			"mode": "prep",
 		},
-		"Workflow": pl.Workflow,
-		"LoadPlan": pl.LoadPlan,
-		"Process":  pl.Process,
-		"File":     pl.File,
-		"Plugin":   pl.Plugin,
+		"Workflow":    pl.Workflow,
+		"LoadPlan":    pl.LoadPlan,
+		"Process":     pl.Process,
+		"File":        pl.File,
+		"Plugin":      pl.Plugin,
+		"DockerImage": pl.DockerImage,
 	}
 
 	vm.Set("print", pl.Print)
@@ -47,5 +48,5 @@ func RunFile(path string) (map[string]*WorkflowDesc, error) {
 		return nil, err
 	}
 	//fmt.Printf("%#v\n", pl.Workflows)
-	return pl.Workflows, nil
+	return pl, nil
 }

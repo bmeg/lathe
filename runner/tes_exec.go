@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"log"
 	"path/filepath"
 
 	"github.com/google/shlex"
@@ -68,6 +69,9 @@ func (tr *TesRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog, error) {
 	resp.GetId()
 
 	err = tr.Client.WaitForTask(context.Background(), resp.Id)
+	if err != nil {
+		log.Printf("Task Error: %s", err)
+	}
 
 	return &CommandLog{}, err
 }

@@ -74,7 +74,7 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	cmdLine, err := raymond.Render(ws.Desc.CommandLine, cmdParams)
 	if err == nil {
 		if outputsFound == len(ws.GetOutputs()) {
-			log.Printf("Skipping command (%d of %d outputs found): %s\n", outputsFound, len(ws.GetOutputs()), cmdLine)
+			//log.Printf("Skipping command (%d of %d outputs found): %s\n", outputsFound, len(ws.GetOutputs()), cmdLine)
 			output.Status = STATUS_OK
 		} else {
 			if !dryRun {

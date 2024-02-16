@@ -57,7 +57,7 @@ var List = &cobra.Command{
 			return err
 		}
 
-		if wf, ok := workflows[wfName]; ok {
+		if wf, ok := workflows.Workflows[wfName]; ok {
 			if outJson {
 				for _, p := range wf.Steps {
 					for k, v := range p.GetInputs() {

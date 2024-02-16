@@ -23,9 +23,9 @@ var Cmd = &cobra.Command{
 			return err
 		}
 
-		for wfn, wfd := range wfs {
+		for wfn, wfd := range wfs.Workflows {
 			fmt.Printf("digraph %s {\n", wfn)
-			wf, err := workflow.PrepWorkflow(wfd)
+			wf, err := workflow.PrepWorkflow(wfd, nil)
 			if err == nil {
 				nameMap := map[string]string{}
 				for n := range wf.Steps {
