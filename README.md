@@ -42,6 +42,31 @@ prep.Add(p)
 ```
 
 
+## Lathe Object 
+```
+	Params: map[string]string{}
+	Workflow:    function(name)
+	LoadPlan:    function(path)
+	Process:     function(Process)
+	File:        function(path)
+	Plugin:      function(commandLine)
+	DockerImage: function(path)
+```
+
+## Process Object
+```
+	BasePath    string
+	Name        string
+	Desc        map[string]any
+	CommandLine string
+	Inputs      map[string]string
+	Outputs     map[string]string
+	MemMB       uint
+	NCpus       uint
+```
+
+
+
 # Running lathe
 
 ```
