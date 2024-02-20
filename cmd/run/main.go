@@ -46,41 +46,47 @@ var Cmd = &cobra.Command{
 			for k := range workflows.Workflows {
 				wNames = append(wNames, k)
 			}
-			log.Printf("workflows: %s\n", strings.Join(wNames, ", "))
-		} else {
-			for _, n := range names {
-				if wfd, ok := workflows.Workflows[n]; ok {
-					wf, err := workflow.PrepWorkflow(wfd, run)
-					if err == nil {
-						//fmt.Printf("Running Workflow: %#v\n", wf)
-						fwf, err := wf.BuildFlame()
-						if err != nil {
-							log.Printf("workflow build error: %s\n", err)
-						}
-						//fmt.Printf("%#v\n", fwf)
-
-						go func() {
-							fwf.ProcessIn <- &workflow.WorkflowStatus{Name: "run", DryRun: dryRun}
-							close(fwf.ProcessIn)
-						}()
-
-						/*
-							go func() {
-								for i := range fwf.ProcessOut {
-									fmt.Printf("%#v\n", i)
-								}
-							}()
-						*/
-						fwf.Workflow.Start()
-						fwf.Workflow.Wait()
-
-						log.Printf("Workflow Done\n")
-					}
-				} else {
-					log.Printf("Workflow %s not found\n", n)
-				}
+			if len(wNames) == 1 {
+				names = wNames
+			} else {
+				log.Printf("Choose a workflow: %s\n", strings.Join(wNames, ", "))
+				return nil
 			}
 		}
+
+		for _, n := range names {
+			if wfd, ok := workflows.Workflows[n]; ok {
+				wf, err := workflow.PrepWorkflow(wfd, run)
+				if err == nil {
+					//fmt.Printf("Running Workflow: %#v\n", wf)
+					fwf, err := wf.BuildFlame()
+					if err != nil {
+						log.Printf("workflow build error: %s\n", err)
+					}
+					//fmt.Printf("%#v\n", fwf)
+
+					go func() {
+						fwf.ProcessIn <- &workflow.WorkflowStatus{Name: "run", DryRun: dryRun}
+						close(fwf.ProcessIn)
+					}()
+
+					/*
+						go func() {
+							for i := range fwf.ProcessOut {
+								fmt.Printf("%#v\n", i)
+							}
+						}()
+					*/
+					fwf.Workflow.Start()
+					fwf.Workflow.Wait()
+
+					log.Printf("Workflow Done\n")
+				}
+			} else {
+				log.Printf("Workflow %s not found\n", n)
+			}
+		}
+
 		return nil
 	},
 }
