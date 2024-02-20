@@ -57,7 +57,6 @@ var Cmd = &cobra.Command{
 				} else {
 					fmt.Printf("%s %d\n", key, stats.Size)
 				}
-
 			}
 		}
 
