@@ -1,13 +1,12 @@
 package runner
 
 import (
-	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	"github.com/bmeg/lathe/logger"
 	"github.com/google/shlex"
 )
 
@@ -64,7 +63,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	var cpuAlloc *PoolAllocation
 	var memAlloc *PoolAllocation
 
-	log.Printf("Requesting CPU: %d RAM: %d\n", cmdTool.NCpus, cmdTool.MemMB)
+	logger.Info("ResourceRequest", "cpus", cmdTool.NCpus, "memMB", cmdTool.MemMB)
 	for {
 		loopMutex := &sync.Mutex{}
 		cpuAlloc, err = sc.cpuPool.Allocate(cmdTool.NCpus)
@@ -93,14 +92,19 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	*/
 	defer cpuAlloc.Return()
 	defer memAlloc.Return()
-	log.Printf("Executing: %#vs", cmdLine)
+	logger.Info("Executing", "commandLine", cmdLine)
 	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
 	cmd.Dir = workdir
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
-	log.Printf("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
+	//TODO: manager tool output capture
+	//cmd.Stdout = os.Stderr
+	//cmd.Stderr = os.Stderr
+	logger.Debug("(%s) %s %s", cmd.Dir, cmd.Path, strings.Join(cmd.Args, " "))
 	//time.Sleep(5 * time.Second)
-	return &CommandLog{}, cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		logger.Info("Command exited with error", "commandLine", cmdLine, "error", err)
+	}
+	return &CommandLog{}, err
 }
 
 type PoolAllocation struct {

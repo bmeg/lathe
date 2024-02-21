@@ -2,10 +2,10 @@ package workflow
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
 )
@@ -33,11 +33,11 @@ func NewWorkflowProcess(wf *Workflow, baseDir string, desc *scriptfile.ProcessDe
 }
 
 func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.KeyValue[string, *WorkflowStatus] {
-	log.Printf("Process %s\n", ws.Desc.Name)
+	logger.Info("Process", "name", ws.Desc.Name)
 	dryRun := false
 	for _, i := range status {
 		if i.Status != STATUS_OK {
-			log.Printf("Received upstream FAIL, skipping: %s", ws.Desc.Name)
+			logger.Info("Received upstream FAIL, skipping", "name", ws.Desc.Name)
 			return flame.KeyValue[string, *WorkflowStatus]{Key: key, Value: i}
 		}
 		if i.DryRun {
@@ -74,7 +74,7 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	cmdLine, err := raymond.Render(ws.Desc.CommandLine, cmdParams)
 	if err == nil {
 		if outputsFound == len(ws.GetOutputs()) {
-			//log.Printf("Skipping command (%d of %d outputs found): %s\n", outputsFound, len(ws.GetOutputs()), cmdLine)
+			logger.Info("Skipping command", "outputsFound", outputsFound, "outputsRequired", len(ws.GetOutputs()), "commandLine", cmdLine)
 			output.Status = STATUS_OK
 		} else {
 			if !dryRun {
@@ -88,16 +88,17 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 				_, err := ws.Workflow.Runner.RunCommand(&toolCmd)
 				if err == nil {
 					output.Status = STATUS_OK
+					logger.Info("Command suceeded", "commandLine", cmdLine)
 				} else {
 					output.Status = STATUS_FAIL
 				}
 			} else {
-				log.Printf("Would run command: %s %#v\n", cmdLine, cmdParams)
+				logger.Info("Would run command: %s %#v\n", cmdLine, cmdParams)
 				output.Status = STATUS_OK
 			}
 		}
 	} else {
-		log.Printf("Template error: %s\n", err)
+		logger.Error("Template error", "error", err)
 		output.Status = STATUS_FAIL
 	}
 	return flame.KeyValue[string, *WorkflowStatus]{Key: key, Value: output}

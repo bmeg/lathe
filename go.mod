@@ -1,6 +1,8 @@
 module github.com/bmeg/lathe
 
-go 1.18
+go 1.21
+
+toolchain go1.21.5
 
 //replace github.com/bmeg/sifter  v0.0.0-20230424183015-48e4308231e6 => /Users/ellrott/workspaces/sifter
 //replace github.com/bmeg/flame v0.0.0-20230213003433-cb84bab88f8a => /Users/ellrott/workspaces/flame
@@ -74,6 +76,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linkedin/goavro/v2 v2.10.0 // indirect
+	github.com/lmittmann/tint v1.0.4
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect

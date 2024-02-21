@@ -2,11 +2,10 @@ package workflow
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
-	"strings"
 
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
 )
@@ -29,7 +28,7 @@ type DataFile struct {
 
 func (df *DataFile) Abs() string {
 	if filepath.IsAbs(df.RelPath) {
-		log.Printf("is abs: %s\n", df.RelPath)
+		logger.Debug("is abs: %s\n", df.RelPath)
 		return df.RelPath
 	}
 	s, _ := filepath.Abs(filepath.Join(df.BaseDir, df.RelPath))
@@ -68,7 +67,7 @@ func (w *Workflow) AddDepends(step WorkflowStep, dep WorkflowStep) error {
 /*****/
 
 func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workflow, error) {
-	log.Printf("Building Workflow DAG\n")
+	logger.Info("Building Workflow DAG")
 	wf := &Workflow{
 		Steps:  map[string]WorkflowStep{},
 		DepMap: make(map[string][]string),
@@ -82,7 +81,7 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workf
 		if proc := p.GetProcess(); proc != nil {
 			ws := NewWorkflowProcess(wf, p.GetBasePath(), proc)
 			if err := wf.AddStep(ws); err != nil {
-				log.Printf("error: %s\n", err)
+				logger.Error("AddStepError", "error", err)
 			}
 			for _, path := range ws.GetInputs() {
 				inFileMap[path.Abs()] = ws
@@ -99,7 +98,7 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workf
 				}
 				s := &WorkflowFileCheck{d}
 				if err := wf.AddStep(s); err != nil {
-					log.Printf("error: %s\n", err)
+					logger.Error("AddStepError", "error", err)
 				}
 			}
 		}
@@ -115,7 +114,7 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workf
 			if inS, ok := outFileMap[path.Abs()]; ok {
 				wf.AddDepends(p, inS)
 			} else {
-				log.Printf("File Check: %s\n", path.Abs())
+				logger.Debug("File Check", "path", path.Abs())
 				inPath := path.Abs()
 				if x, ok := fileSteps[inPath]; ok {
 					wf.AddDepends(p, x)
@@ -124,7 +123,7 @@ func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workf
 					s := &WorkflowFileCheck{lPath}
 					fileSteps[inPath] = s
 					if err := wf.AddStep(s); err != nil {
-						log.Printf("error: %s\n", err)
+						logger.Error("FileCheckError", "error", err)
 					}
 					wf.AddDepends(p, s)
 				}
@@ -142,7 +141,7 @@ type FlameWorkflow struct {
 }
 
 func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
-	log.Printf("Converting DAG to op-flow\n")
+	logger.Info("Converting DAG to op-flow")
 	out := flame.NewWorkflow()
 
 	nodeMap := map[WorkflowStep]flame.Emitter[flame.KeyValue[string, *WorkflowStatus]]{}
@@ -173,12 +172,12 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 	}
 	for _, v := range wf.Steps {
 		if _, ok := hasDeps[v.GetName()]; !ok {
-			log.Printf("No dependents: %s\n", v.GetName())
+			logger.Debug("Step has No dependents", "name", v.GetName())
 		} else {
 			if len(wf.DepMap[v.GetName()]) == 0 {
-				log.Printf("No dependents: %s\n", v.GetName())
+				logger.Debug("No dependents: %s\n", v.GetName())
 			} else {
-				log.Printf("Has dependents: %s\n", v.GetName())
+				logger.Debug("Has dependents: %s\n", v.GetName())
 			}
 		}
 	}
@@ -198,7 +197,12 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 					}
 				}
 				if len(inNodes) == len(wf.DepMap[v.GetName()]) {
-					log.Printf("Adding Step: %s (%s) depends: (%s) %#v\n", v.GetName(), v.GetDesc(), strings.Join(wf.DepMap[v.GetName()], ","), v.GetInputs())
+					logger.Debug("Adding Step",
+						"name", v.GetName(),
+						"description", v.GetDesc(),
+						"depMap", wf.DepMap[v.GetName()],
+						"inputs", v.GetInputs(),
+					)
 
 					curV := v
 					//fmt.Printf("Found dependancy: %s\n", curV.GetDesc())
@@ -217,7 +221,7 @@ func (wf *Workflow) BuildFlame() (*FlameWorkflow, error) {
 
 	for _, v := range wf.Steps {
 		if _, ok := nodeMap[v]; !ok {
-			log.Printf("Step %s not added to graph\n", v.GetName())
+			logger.Info("Step not added to graph", "name", v.GetName())
 		}
 	}
 

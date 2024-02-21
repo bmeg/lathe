@@ -2,8 +2,8 @@ package scriptfile
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/bmeg/lathe/logger"
 	"github.com/dop251/goja"
 )
 
@@ -31,10 +31,10 @@ func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
 	} else if wf, ok := e.(*WorkflowDesc); ok {
 		wd.Steps = append(wd.Steps, wf.Steps...)
 	} else if file, ok := e.(*File); ok {
-		log.Printf("Adding file check:%#vs\n", file)
+		logger.Debug("Adding file check", "path", file)
 		wd.Steps = append(wd.Steps, &FileCheck{File: file})
 	} else {
-		log.Printf("Unknown object: %#v\n", e)
+		logger.Error("Unknown object", "error", e)
 	}
 	return nil
 }

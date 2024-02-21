@@ -1,16 +1,18 @@
 package run
 
 import (
-	"log"
 	"path/filepath"
 	"strings"
 
+	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/lathe/workflow"
 	"github.com/spf13/cobra"
 )
 
+var verbose = false
+var jsonLog = false
 var dryRun bool = false
 var tesServer = ""
 
@@ -24,6 +26,9 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		logger.Init(verbose, jsonLog)
+
 		//baseDir := filepath.Dir(scriptPath)
 		names := []string{}
 		if len(args) > 1 {
@@ -31,7 +36,7 @@ var Cmd = &cobra.Command{
 		}
 		workflows, err := scriptfile.RunFile(scriptPath)
 		if err != nil {
-			log.Printf("Script Error: %s\n", err)
+			logger.Error("Script Error %s : %s\n", scriptPath, err)
 			return err
 		}
 
@@ -49,7 +54,7 @@ var Cmd = &cobra.Command{
 			if len(wNames) == 1 {
 				names = wNames
 			} else {
-				log.Printf("Choose a workflow: %s\n", strings.Join(wNames, ", "))
+				logger.Error("Need to choose a workflow", "options", strings.Join(wNames, ", "))
 				return nil
 			}
 		}
@@ -61,7 +66,7 @@ var Cmd = &cobra.Command{
 					//fmt.Printf("Running Workflow: %#v\n", wf)
 					fwf, err := wf.BuildFlame()
 					if err != nil {
-						log.Printf("workflow build error: %s\n", err)
+						logger.Error("workflow build error: %s\n", err)
 					}
 					//fmt.Printf("%#v\n", fwf)
 
@@ -80,12 +85,14 @@ var Cmd = &cobra.Command{
 					fwf.Workflow.Start()
 					fwf.Workflow.Wait()
 
-					log.Printf("Workflow Done\n")
+					logger.Info("Workflow Done")
 				}
 			} else {
-				log.Printf("Workflow %s not found\n", n)
+				logger.Error("Workflow not found", "name", n)
 			}
 		}
+
+		logger.Close()
 
 		return nil
 	},
@@ -95,4 +102,6 @@ func init() {
 	flags := Cmd.Flags()
 	flags.BoolVarP(&dryRun, "dry-run", "x", dryRun, "Scan workflow without running commands")
 	flags.StringVarP(&tesServer, "tes", "t", tesServer, "TES Server")
+	flags.BoolVarP(&jsonLog, "jsonlog", "j", jsonLog, "JSON logging output")
+	flags.BoolVarP(&verbose, "verbose", "v", verbose, "Vebose logging")
 }

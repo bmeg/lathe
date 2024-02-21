@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os/exec"
 	"path/filepath"
 
+	"github.com/bmeg/lathe/logger"
 	"github.com/dop251/goja"
 	"github.com/google/shlex"
 )
@@ -33,9 +33,9 @@ type Plan struct {
 }
 
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
-	if pl.Verbose {
-		log.Printf("Process: %#v\n", data)
-	}
+
+	logger.Info("Process info", "data", data)
+
 	out := &ProcessDesc{BasePath: filepath.Dir(pl.Path)}
 
 	out.Desc = data
@@ -109,9 +109,7 @@ func (pl *Plan) File(data map[string]any) *File {
 }
 
 func (pl *Plan) Workflow(name string) *WorkflowDesc {
-	if pl.Verbose {
-		log.Printf("Workflow\n")
-	}
+	logger.Debug("Workflow Init", "name", name)
 	w := &WorkflowDesc{Name: fmt.Sprintf("%s:%s", pl.Path, name)}
 	pl.Workflows[name] = w
 	return w
@@ -129,17 +127,17 @@ func (pl *Plan) DockerImage(call goja.ConstructorCall) *goja.Object {
 		BaseDir: baseDir.String(),
 		Tag:     tag.String(),
 	}
-	log.Printf("Found Image %#v", out)
+	logger.Info("Image Init", "data", out)
 	pl.Images = append(pl.Images, out)
 	return nil
 }
 
 func (pl *Plan) Print(x any) {
-	log.Printf("%s", x)
+	logger.Info(fmt.Sprintf("%s", x))
 }
 
 func (pl *Plan) Println(x any) {
-	log.Printf("%s\n", x)
+	logger.Info(fmt.Sprintf("%s\n", x))
 }
 
 func (pl *Plan) Glob(pattern string) []string {
@@ -149,11 +147,11 @@ func (pl *Plan) Glob(pattern string) []string {
 }
 
 func (pl *Plan) LoadPlan(path string) *Plan {
-	log.Printf("Loading sub-workflow %s\n", path)
+	logger.Debug("Loading sub-workflow", "path", path)
 	if x, err := RunFile(path); err == nil {
 		return x
 	} else {
-		log.Printf("Error Loading sub-workflow %s : %s\n", path, err)
+		logger.Error("Error Loading sub-workflow", "path", path, "error", err)
 	}
 	return &Plan{}
 }
@@ -162,7 +160,7 @@ func (pl *Plan) Plugin(cmdLine string) goja.Value {
 
 	cmdArgs, err := shlex.Split(cmdLine)
 	if err != nil {
-		log.Printf("Error: %s\n", err)
+		logger.Error("Plugin Error", "commandLine", cmdLine, "error", err)
 		return nil
 	}
 
@@ -174,7 +172,7 @@ func (pl *Plan) Plugin(cmdLine string) goja.Value {
 
 	data, err := io.ReadAll(stdout)
 	if err != nil {
-		log.Printf("Error: %s\n", err)
+		logger.Error("Plugin Error", "error", err)
 	}
 
 	//fmt.Printf("Plugin output: %s\n", data)

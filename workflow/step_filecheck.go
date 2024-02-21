@@ -2,9 +2,9 @@ package workflow
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/logger"
 )
 
 /*****/
@@ -24,10 +24,11 @@ func (ws *WorkflowFileCheck) Process(key string, status []*WorkflowStatus) flame
 		}
 	}
 	output := &WorkflowStatus{DryRun: dryRun}
-	log.Printf("Checking for file: %s\n", ws.File.Abs())
+	logger.Debug("Checking for file\n", "path", ws.File.Abs())
 	if !PathExists(ws.File.Abs()) {
 		output.Status = STATUS_FAIL
-		log.Printf("Missing file: %s\n", ws.File.Abs())
+		logger.Error("Missing file", "path", ws.File.Abs())
+		logger.AddSummaryError("Missing file", "path", ws.File.Abs())
 	} else {
 		output.Status = STATUS_OK
 	}
