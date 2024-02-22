@@ -49,6 +49,12 @@ func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 		}
 	}
 
+	if cmd, ok := data["shell"]; ok {
+		if cmdStr, ok := cmd.(string); ok {
+			out.Shell = cmdStr
+		}
+	}
+
 	if inputs, ok := data["inputs"]; ok {
 		if inputsMap, ok := inputs.(map[string]any); ok {
 			for k, v := range inputsMap {

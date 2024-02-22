@@ -5,6 +5,7 @@ type ProcessDesc struct {
 	Name        string
 	Desc        map[string]any
 	CommandLine string
+	Shell       string
 	Inputs      map[string]string
 	Outputs     map[string]string
 	MemMB       uint

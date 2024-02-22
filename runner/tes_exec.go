@@ -5,7 +5,6 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/google/shlex"
 	"github.com/ohsu-comp-bio/funnel/tes"
 )
 
@@ -40,16 +39,11 @@ func (tr *TesRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog, error) {
 		outputs = append(outputs, &t)
 	}
 
-	cmdLine, err := shlex.Split(cmdTool.CommandLine)
-	if err != nil {
-		return nil, err
-	}
-
 	task := tes.Task{
 		Executors: []*tes.Executor{
 			{
 				Image:   tr.DefaultImage,
-				Command: cmdLine,
+				Command: cmdTool.CommandLine,
 				Workdir: workdir,
 			},
 		},

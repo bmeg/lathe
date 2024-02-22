@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/bmeg/lathe/logger"
-	"github.com/google/shlex"
 )
 
 type Error string
@@ -19,7 +18,7 @@ func (e Error) Error() string {
 var PoolErrorNotAvailable = Error("not avalible")
 
 type CommandLineTool struct {
-	CommandLine string
+	CommandLine []string
 	BaseDir     string
 	Inputs      []string
 	Outputs     []string
@@ -55,11 +54,7 @@ func NewSingleMachineRunner(ncpus uint, maxmb uint) CommandRunner {
 func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog, error) {
 	workdir, _ := filepath.Abs(cmdTool.BaseDir)
 
-	cmdLine, err := shlex.Split(cmdTool.CommandLine)
-	if err != nil {
-		return nil, err
-	}
-
+	var err error
 	var cpuAlloc *PoolAllocation
 	var memAlloc *PoolAllocation
 
@@ -92,8 +87,8 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	*/
 	defer cpuAlloc.Return()
 	defer memAlloc.Return()
-	logger.Info("Executing", "commandLine", cmdLine)
-	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
+	logger.Info("Executing", "commandLine", cmdTool.CommandLine)
+	cmd := exec.Command(cmdTool.CommandLine[0], cmdTool.CommandLine[1:]...)
 	cmd.Dir = workdir
 	//TODO: manager tool output capture
 	//cmd.Stdout = os.Stderr
@@ -102,7 +97,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	//time.Sleep(5 * time.Second)
 	err = cmd.Run()
 	if err != nil {
-		logger.Info("Command exited with error", "commandLine", cmdLine, "error", err)
+		logger.Info("Command exited with error", "commandLine", cmdTool.CommandLine, "error", err)
 	}
 	return &CommandLog{}, err
 }

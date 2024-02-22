@@ -8,6 +8,7 @@ import (
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
 	"github.com/bmeg/lathe/scriptfile"
+	"github.com/google/shlex"
 )
 
 type WorkflowStep interface {
@@ -71,8 +72,36 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 		"outputs": cmdOutputs,
 	}
 
-	cmdLine, err := raymond.Render(ws.Desc.CommandLine, cmdParams)
-	if err == nil {
+	cmdLine := []string{}
+	output.Status = STATUS_OK
+
+	if ws.Desc.CommandLine != "" {
+		commandLineBase := ws.Desc.CommandLine
+		commandLineText, err := raymond.Render(commandLineBase, cmdParams)
+		if err != nil {
+			logger.Error("Template error", "error", err)
+			output.Status = STATUS_FAIL
+		}
+		if output.Status != STATUS_FAIL {
+			cmdLine, err = shlex.Split(commandLineText)
+			if err != nil {
+				logger.Error("Template error", "error", err)
+				output.Status = STATUS_FAIL
+			}
+		}
+	} else if ws.Desc.Shell != "" {
+		commandLineBase := ws.Desc.Shell
+		commandLineText, err := raymond.Render(commandLineBase, cmdParams)
+		if err != nil {
+			logger.Error("Template error", "error", err)
+			output.Status = STATUS_FAIL
+		}
+		if output.Status != STATUS_FAIL {
+			cmdLine = []string{"bash", "-c", commandLineText}
+		}
+	}
+
+	if output.Status != STATUS_FAIL {
 		if outputsFound == len(ws.GetOutputs()) {
 			logger.Info("Skipping command", "outputsFound", outputsFound, "outputsRequired", len(ws.GetOutputs()), "commandLine", cmdLine)
 			output.Status = STATUS_OK
@@ -91,16 +120,15 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 					logger.Info("Command suceeded", "commandLine", cmdLine)
 				} else {
 					output.Status = STATUS_FAIL
+					logger.AddSummaryError("CommandFailed", "commandLine", cmdLine)
 				}
 			} else {
 				logger.Info("Would run command: %s %#v\n", cmdLine, cmdParams)
 				output.Status = STATUS_OK
 			}
 		}
-	} else {
-		logger.Error("Template error", "error", err)
-		output.Status = STATUS_FAIL
 	}
+
 	return flame.KeyValue[string, *WorkflowStatus]{Key: key, Value: output}
 }
 
