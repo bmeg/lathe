@@ -97,7 +97,7 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	//time.Sleep(5 * time.Second)
 	err = cmd.Run()
 	if err != nil {
-		logger.Info("Command exited with error", "commandLine", cmdTool.CommandLine, "error", err)
+		logger.Error("Command exited with error", "commandLine", cmdTool.CommandLine, "error", err)
 	}
 	return &CommandLog{}, err
 }
