@@ -2,6 +2,8 @@ package workflow
 
 import (
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
@@ -102,10 +104,37 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	}
 
 	if output.Status != STATUS_FAIL {
+		doRun := true
 		if outputsFound == len(ws.GetOutputs()) {
-			logger.Info("Skipping command", "outputsFound", outputsFound, "outputsRequired", len(ws.GetOutputs()), "commandLine", cmdLine)
-			output.Status = STATUS_OK
-		} else {
+
+			var outputDate time.Time
+			for _, o := range ws.GetOutputs() {
+				i, err := os.Stat(o.Abs())
+				if err == nil {
+					if i.ModTime().After(outputDate) {
+						outputDate = i.ModTime()
+					}
+				}
+			}
+
+			var inputDate time.Time
+			for _, o := range ws.GetInputs() {
+				i, err := os.Stat(o.Abs())
+				if err == nil {
+					if i.ModTime().After(inputDate) {
+						inputDate = i.ModTime()
+					}
+				}
+			}
+			if outputDate.Before(inputDate) {
+				logger.Info("Output files outdated, running command", "inputDate", inputDate, "outputDate", outputDate, "outputsRequired", ws.GetOutputs(), "commandLine", cmdLine)
+			} else {
+				logger.Info("Skipping command", "outputsFound", outputsFound, "outputsRequired", ws.GetOutputs(), "commandLine", cmdLine)
+				output.Status = STATUS_OK
+				doRun = false
+			}
+		}
+		if doRun {
 			if !dryRun {
 				//fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
 				toolCmd := runner.CommandLineTool{
@@ -116,11 +145,26 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 				}
 				_, err := ws.Workflow.Runner.RunCommand(&toolCmd)
 				if err == nil {
-					output.Status = STATUS_OK
-					logger.Info("Command suceeded", "commandLine", cmdLine)
+					for k, v := range ws.GetOutputs() {
+						if !PathExists(v.Abs()) {
+							logger.Error("Missing output", "commandLine", cmdLine, "name", k, "path", v.Abs())
+							output.Status = STATUS_FAIL
+							logger.AddSummaryError("Missing output", "commandLine", cmdLine, "name", k, "path", v.Abs())
+						}
+					}
+					if output.Status == STATUS_OK {
+						logger.Info("Command suceeded", "commandLine", cmdLine)
+					}
 				} else {
 					output.Status = STATUS_FAIL
 					logger.AddSummaryError("CommandFailed", "commandLine", cmdLine)
+					//The command failed, so outputs might be partially completed. Delete them for safety
+					//TODO: setup command line option to turn this off
+					for _, i := range ws.GetOutputs() {
+						if IsFile(i.Abs()) {
+							os.Remove(i.Abs())
+						}
+					}
 				}
 			} else {
 				logger.Info("Would run command: %s %#v\n", cmdLine, cmdParams)
