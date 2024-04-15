@@ -137,11 +137,22 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 		if doRun {
 			if !dryRun {
 				//fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
+				inputs := []string{}
+				outputs := []string{}
+				for _, v := range ws.Desc.Inputs {
+					inputs = append(inputs, v)
+				}
+				for _, v := range ws.Desc.Outputs {
+					outputs = append(outputs, v)
+				}
 				toolCmd := runner.CommandLineTool{
 					CommandLine: cmdLine,
 					BaseDir:     ws.BaseDir,
 					MemMB:       ws.Desc.MemMB,
 					NCpus:       ws.Desc.NCpus,
+					Image:       ws.Desc.Image,
+					Inputs:      inputs,
+					Outputs:     outputs,
 				}
 				_, err := ws.Workflow.Runner.RunCommand(&toolCmd)
 				if err == nil {

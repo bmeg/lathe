@@ -75,6 +75,13 @@ func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 		}
 	}
 
+	out.Image = ""
+	if image, ok := data["image"]; ok {
+		if imageStr, ok := image.(string); ok {
+			out.Image = imageStr
+		}
+	}
+
 	out.MemMB = 1024
 	if memMb, ok := data["memMB"]; ok {
 		if memMbInt, ok := memMb.(int); ok {
