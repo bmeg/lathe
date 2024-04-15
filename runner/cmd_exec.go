@@ -2,6 +2,7 @@ package runner
 
 import (
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ type CommandLineTool struct {
 	Outputs     []string
 	NCpus       uint
 	MemMB       uint
+	Image       string
 }
 
 type CommandLog struct {
@@ -87,9 +89,37 @@ func (sc *SingleMachineRunner) RunCommand(cmdTool *CommandLineTool) (*CommandLog
 	*/
 	defer cpuAlloc.Return()
 	defer memAlloc.Return()
-	logger.Info("Executing", "commandLine", cmdTool.CommandLine)
-	cmd := exec.Command(cmdTool.CommandLine[0], cmdTool.CommandLine[1:]...)
-	cmd.Dir = workdir
+	var cmd *exec.Cmd
+	if cmdTool.Image != "" {
+		dockerCmd := []string{"docker", "run", "--rm"}
+		u, _ := user.Current()
+		dockerCmd = append(dockerCmd, "--user", u.Uid)
+		dockerCmd = append(dockerCmd, "-v", workdir+":"+workdir)
+		dockerCmd = append(dockerCmd, "-w", workdir)
+
+		for _, i := range cmdTool.Inputs {
+			p, _ := filepath.Abs(filepath.Join(workdir, i))
+			dockerCmd = append(dockerCmd, "-v", p+":"+p)
+		}
+		oSet := map[string]bool{}
+		for _, i := range cmdTool.Outputs {
+			p, _ := filepath.Abs(filepath.Join(workdir, i))
+			b := filepath.Dir(p)
+			oSet[b] = true
+		}
+		for b := range oSet {
+			dockerCmd = append(dockerCmd, "-v", b+":"+b)
+		}
+		dockerCmd = append(dockerCmd, cmdTool.Image)
+		dockerCmd = append(dockerCmd, cmdTool.CommandLine...)
+		logger.Info("Executing", "dockerCommand", strings.Join(dockerCmd, " "))
+		cmd = exec.Command(dockerCmd[0], dockerCmd[1:]...)
+		cmd.Dir = workdir
+	} else {
+		logger.Info("Executing", "commandLine", cmdTool.CommandLine)
+		cmd = exec.Command(cmdTool.CommandLine[0], cmdTool.CommandLine[1:]...)
+		cmd.Dir = workdir
+	}
 	//TODO: manager tool output capture
 	//cmd.Stdout = os.Stderr
 	//cmd.Stderr = os.Stderr

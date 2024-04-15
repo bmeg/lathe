@@ -16,20 +16,18 @@ func Init(verbose bool, json bool) {
 	if verbose {
 		level = slog.LevelDebug
 	}
-
 	if json {
 		logger = slog.New(
 			slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: level}),
 		)
 	} else {
-
 		logger = slog.New(
 			tint.NewHandler(os.Stderr, &tint.Options{
 				Level:      level,
 				TimeFormat: time.Kitchen,
 			}))
-
 	}
+	slog.SetDefault(logger)
 }
 
 func Info(msg string, args ...any) {

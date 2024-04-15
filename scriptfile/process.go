@@ -10,6 +10,7 @@ type ProcessDesc struct {
 	Outputs     map[string]string
 	MemMB       uint
 	NCpus       uint
+	Image       string
 }
 
 func (pd *ProcessDesc) GetName() string {
