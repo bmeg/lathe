@@ -21,14 +21,16 @@ func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
 	if len(call.Arguments) != 1 {
 		return nil
 	}
-	//fmt.Printf("Adding %#v\n", call.Arguments[0])
+	//logger.Debug("Script add", "argument", call.Arguments[0])
 	e := call.Arguments[0].Export()
 	if proc, ok := e.(*ProcessDesc); ok {
 		if proc.Name == "" {
 			proc.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Steps))
 		}
+		logger.Debug("Adding process", "parent", wd.Name, "name", proc.Name)
 		wd.Steps = append(wd.Steps, proc)
 	} else if wf, ok := e.(*WorkflowDesc); ok {
+		logger.Debug("Adding subworkflow", "parent", wd.Name, "name", wf.Name, "stepCount", len(wf.Steps))
 		wd.Steps = append(wd.Steps, wf.Steps...)
 	} else if file, ok := e.(*File); ok {
 		logger.Debug("Adding file check", "path", file)

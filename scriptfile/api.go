@@ -159,14 +159,14 @@ func (pl *Plan) Glob(pattern string) []string {
 	return matches
 }
 
-func (pl *Plan) LoadPlan(path string) *Plan {
+func (pl *Plan) LoadPlan(path string) map[string]*WorkflowDesc {
 	logger.Debug("Loading sub-workflow", "path", path)
 	if x, err := RunFile(path); err == nil {
-		return x
+		return x.Workflows
 	} else {
 		logger.Error("Error Loading sub-workflow", "path", path, "error", err)
 	}
-	return &Plan{}
+	return map[string]*WorkflowDesc{}
 }
 
 func (pl *Plan) Plugin(cmdLine string) goja.Value {
@@ -185,7 +185,7 @@ func (pl *Plan) Plugin(cmdLine string) goja.Value {
 
 	data, err := io.ReadAll(stdout)
 	if err != nil {
-		logger.Error("Plugin Error", "error", err)
+		logger.Error("Plugin Error", "error", err, "commandLine", cmdLine)
 	}
 
 	//fmt.Printf("Plugin output: %s\n", data)

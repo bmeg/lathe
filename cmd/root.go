@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bmeg/lathe/cmd/inputs"
+	"github.com/bmeg/lathe/cmd/outputs"
 	"github.com/bmeg/lathe/cmd/prep_upload"
 	"github.com/bmeg/lathe/cmd/run"
 	"github.com/bmeg/lathe/cmd/viz"
@@ -21,6 +22,7 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(prep_upload.Cmd)
 	RootCmd.AddCommand(inputs.Cmd)
+	RootCmd.AddCommand(outputs.Cmd)
 	RootCmd.AddCommand(run.Cmd)
 	RootCmd.AddCommand(viz.Cmd)
 }

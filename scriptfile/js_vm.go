@@ -45,7 +45,7 @@ func RunFile(path string) (*Plan, error) {
 
 	_, err = vm.RunScript("main", string(source))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing: %s = %s", path, err)
 	}
 	//fmt.Printf("%#v\n", pl.Workflows)
 	return pl, nil
