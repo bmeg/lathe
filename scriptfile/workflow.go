@@ -7,36 +7,52 @@ import (
 	"github.com/dop251/goja"
 )
 
-type WorkflowDesc struct {
-	Name  string
-	Steps []Step
-}
-
-//func (pd *ProcessDesc) Depends(p *ProcessDesc) {
-//fmt.Printf("Adding process dependency: %#v", pd)
-//	pd.Dependencies = append(pd.Dependencies, p)
-//}
-
+// Add adds a step to the workflow. The step can be a ProcessDesc, FileCheck,
+// or another WorkflowDesc (which will be inlined).
+// This is called from JavaScript to compose the workflow.
 func (wd *WorkflowDesc) Add(call goja.ConstructorCall) *goja.Object {
 	if len(call.Arguments) != 1 {
+		logger.Error("Workflow.Add requires exactly one argument")
 		return nil
 	}
-	//logger.Debug("Script add", "argument", call.Arguments[0])
+
 	e := call.Arguments[0].Export()
+
 	if proc, ok := e.(*ProcessDesc); ok {
+		// Auto-generate a name if not provided
 		if proc.Name == "" {
-			proc.Name = fmt.Sprintf("%s:%d", wd.Name, len(wd.Steps))
+			proc.Name = fmt.Sprintf("%s_step_%d", wd.Name, len(wd.Steps))
 		}
-		logger.Debug("Adding process", "parent", wd.Name, "name", proc.Name)
+		logger.Debug("Adding process to workflow", "workflow", wd.Name, "process", proc.Name)
 		wd.Steps = append(wd.Steps, proc)
+
 	} else if wf, ok := e.(*WorkflowDesc); ok {
-		logger.Debug("Adding subworkflow", "parent", wd.Name, "name", wf.Name, "stepCount", len(wf.Steps))
+		// Inline sub-workflow steps
+		logger.Debug("Inlining sub-workflow into parent", "parent", wd.Name, "subworkflow", wf.Name, "steps", len(wf.Steps))
 		wd.Steps = append(wd.Steps, wf.Steps...)
+
+	} else if fc, ok := e.(*FileCheck); ok {
+		// Add file existence check step
+		logger.Debug("Adding file check to workflow", "workflow", wd.Name, "file", fc.File.Path)
+		wd.Steps = append(wd.Steps, fc)
+
 	} else if file, ok := e.(*File); ok {
-		logger.Debug("Adding file check", "path", file)
+		// Wrap File in FileCheck if passed directly
+		logger.Debug("Adding file (wrapped as check) to workflow", "workflow", wd.Name, "file", file.Path)
 		wd.Steps = append(wd.Steps, &FileCheck{File: file})
+
 	} else {
-		logger.Error("Unknown object", "error", e)
+		logger.Error("Workflow.Add received unsupported step type", "workflow", wd.Name, "type", fmt.Sprintf("%T", e))
 	}
+
+	return nil
+}
+
+// AddWithName is a convenience method to add a step with a specific name
+func (wd *WorkflowDesc) AddWithName(name string, step Step) error {
+	if proc, ok := step.(*ProcessDesc); ok {
+		proc.Name = name
+	}
+	wd.Steps = append(wd.Steps, step)
 	return nil
 }

@@ -1,30 +1,9 @@
 package scriptfile
 
-type ProcessDesc struct {
-	BasePath    string
-	Name        string
-	Desc        map[string]any
-	CommandLine string
-	Shell       string
-	Inputs      map[string]string
-	Outputs     map[string]string
-	MemMB       uint
-	NCpus       uint
-	Image       string
-}
+// This file is kept for backwards compatibility.
+// ProcessDesc and its methods are now defined in model.go
+// which provides a more complete workflow object model with
+// futures, callbacks, and resource management.
 
-func (pd *ProcessDesc) GetName() string {
-	return pd.Name
-}
+// All functionality previously in this file has been migrated to model.go
 
-func (pd *ProcessDesc) GetBasePath() string {
-	return pd.BasePath
-}
-
-func (pd *ProcessDesc) GetInputs() map[string]string {
-	return pd.Inputs
-}
-
-func (pd *ProcessDesc) GetProcess() *ProcessDesc {
-	return pd
-}

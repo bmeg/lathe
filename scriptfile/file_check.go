@@ -1,27 +1,12 @@
 package scriptfile
 
-import "path/filepath"
+// This file is kept for backwards compatibility.
+// FileCheck and File types are now defined in model.go
+// which provides a more complete file abstraction including:
+// - Multiple file types (local, S3, HTTP)
+// - File metadata support
+// - File size and modification time tracking
+// - Structured type safety
 
-type FileCheck struct {
-	File *File
-}
+// All functionality previously in this file has been migrated to model.go
 
-func (fc *FileCheck) GetName() string {
-	b := filepath.Dir(fc.File.BasePath)
-	p := filepath.Join(b, fc.File.Path)
-	return p
-}
-
-func (fc *FileCheck) GetBasePath() string {
-	return fc.File.BasePath
-}
-
-func (fc *FileCheck) GetInputs() map[string]string {
-	return map[string]string{
-		"file": fc.File.Path,
-	}
-}
-
-func (fc *FileCheck) GetProcess() *ProcessDesc {
-	return nil
-}
