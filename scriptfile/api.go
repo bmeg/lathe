@@ -143,10 +143,10 @@ func (pl *Plan) Workflow(name string) *WorkflowDesc {
 	logger.Debug("Creating workflow", "name", name)
 
 	workflow := &WorkflowDesc{
-		Name:       fmt.Sprintf("%s:%s", pl.Path, name),
-		Steps:      []Step{},
+		Name:        fmt.Sprintf("%s:%s", pl.Path, name),
+		Steps:       []Step{},
 		InputParams: make(map[string]any),
-		Metadata:   make(map[string]any),
+		Metadata:    make(map[string]any),
 	}
 
 	pl.Workflows[name] = workflow
@@ -230,9 +230,9 @@ func (pl *Plan) DockerImage(call goja.ConstructorCall) *goja.Object {
 	tag := call.Arguments[1].String()
 
 	image := &DockerImage{
-		BaseDir:    baseDir,
-		Tag:        tag,
-		BuildArgs:  make(map[string]string),
+		BaseDir:   baseDir,
+		Tag:       tag,
+		BuildArgs: make(map[string]string),
 	}
 
 	// Optional Dockerfile path
@@ -295,10 +295,10 @@ func (pl *Plan) OnComplete(proc *ProcessDesc, callback goja.Value) error {
 		resultMap := map[string]any{
 			"jobName": result.JobName,
 			"status": map[string]any{
-				"state":     string(result.Status.State),
-				"exitCode":  result.Status.ExitCode,
-				"error":     result.Status.Error,
-				"metadata":  result.Status.Metadata,
+				"state":    string(result.Status.State),
+				"exitCode": result.Status.ExitCode,
+				"error":    result.Status.Error,
+				"metadata": result.Status.Metadata,
 			},
 			"outputFiles": result.OutputFiles,
 			"logs":        result.Logs,

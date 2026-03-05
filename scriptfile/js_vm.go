@@ -92,7 +92,7 @@ func (pl *Plan) setupVM() error {
 		"Process": pl.Process,
 
 		// File declaration and checking
-		"File": pl.File,
+		"File":      pl.File,
 		"FileCheck": pl.FileCheck,
 
 		// Docker image declaration

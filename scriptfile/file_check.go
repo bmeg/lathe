@@ -9,4 +9,3 @@ package scriptfile
 // - Structured type safety
 
 // All functionality previously in this file has been migrated to model.go
-

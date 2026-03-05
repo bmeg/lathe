@@ -9,4 +9,3 @@ package scriptfile
 // - Metadata support
 
 // All functionality previously in this file has been migrated to model.go
-

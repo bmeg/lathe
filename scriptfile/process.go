@@ -6,4 +6,3 @@ package scriptfile
 // futures, callbacks, and resource management.
 
 // All functionality previously in this file has been migrated to model.go
-

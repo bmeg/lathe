@@ -47,9 +47,9 @@ type File struct {
 	BasePath string `json:"-"`
 
 	// Optional metadata
-	Size        int64                  `json:"size,omitempty"`
-	LastModified time.Time             `json:"lastModified,omitempty"`
-	Metadata    map[string]string      `json:"metadata,omitempty"`
+	Size         int64             `json:"size,omitempty"`
+	LastModified time.Time         `json:"lastModified,omitempty"`
+	Metadata     map[string]string `json:"metadata,omitempty"`
 }
 
 // MustExist indicates this file must exist before a job runs
@@ -158,21 +158,21 @@ type ToolCommand struct {
 type JobState string
 
 const (
-	JobStatePending    JobState = "pending"
-	JobStateRunning    JobState = "running"
-	JobStateCompleted  JobState = "completed"
-	JobStateFailed     JobState = "failed"
-	JobStateCancelled  JobState = "cancelled"
+	JobStatePending   JobState = "pending"
+	JobStateRunning   JobState = "running"
+	JobStateCompleted JobState = "completed"
+	JobStateFailed    JobState = "failed"
+	JobStateCancelled JobState = "cancelled"
 )
 
 // JobStatus represents the execution status of a job
 type JobStatus struct {
-	State      JobState           `json:"state"`
-	ExitCode   int                `json:"exitCode,omitempty"`
-	Error      string             `json:"error,omitempty"`
-	StartTime  time.Time          `json:"startTime,omitempty"`
-	EndTime    time.Time          `json:"endTime,omitempty"`
-	Metadata   map[string]any     `json:"metadata,omitempty"`
+	State     JobState       `json:"state"`
+	ExitCode  int            `json:"exitCode,omitempty"`
+	Error     string         `json:"error,omitempty"`
+	StartTime time.Time      `json:"startTime,omitempty"`
+	EndTime   time.Time      `json:"endTime,omitempty"`
+	Metadata  map[string]any `json:"metadata,omitempty"`
 }
 
 // ProcessDesc represents a job declaration in the workflow
