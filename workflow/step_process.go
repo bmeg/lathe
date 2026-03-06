@@ -3,14 +3,13 @@ package workflow
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/aymerick/raymond"
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
-	"github.com/bmeg/lathe/scriptfile"
-	"github.com/google/shlex"
 )
 
 type WorkflowStep interface {
@@ -27,16 +26,18 @@ type WorkflowStep interface {
 
 type WorkflowProcess struct {
 	BaseDir  string
-	Desc     *scriptfile.ProcessDesc
+	Desc     *jflow.ProcessDesc
 	Workflow *Workflow
 }
 
-func NewWorkflowProcess(wf *Workflow, baseDir string, desc *scriptfile.ProcessDesc) *WorkflowProcess {
+func NewWorkflowProcess(wf *Workflow, baseDir string, desc *jflow.ProcessDesc) *WorkflowProcess {
 	return &WorkflowProcess{BaseDir: baseDir, Desc: desc, Workflow: wf}
 }
 
 func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.KeyValue[string, *WorkflowStatus] {
 	logger.Info("Process", "name", ws.Desc.Name)
+
+	// Normalize legacy fields from TES format if needed
 	dryRun := false
 	for _, i := range status {
 		if i.Status != STATUS_OK {
@@ -51,7 +52,8 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	outputsFound := 0
 	notFound := []string{}
 	for _, o := range ws.GetOutputs() {
-		if PathExists(o.Abs()) {
+		matches := resolveOutputMatches(o)
+		if len(matches) > 0 {
 			outputsFound++
 		} else {
 			notFound = append(notFound, o.RelPath)
@@ -61,12 +63,21 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	cmdInputs := map[string]any{}
 	cmdOutputs := map[string]any{}
 
-	for k, v := range ws.Desc.Inputs {
-		cmdInputs[k] = v
+	// Convert TES Input/Output arrays to maps for template rendering
+	for i, input := range ws.Desc.Inputs {
+		name := input.Name
+		if name == "" {
+			name = fmt.Sprintf("input_%d", i)
+		}
+		cmdInputs[name] = input.Path
 	}
 
-	for k, v := range ws.Desc.Outputs {
-		cmdOutputs[k] = v
+	for i, output := range ws.Desc.Outputs {
+		name := output.Name
+		if name == "" {
+			name = fmt.Sprintf("output_%d", i)
+		}
+		cmdOutputs[name] = output.Path
 	}
 
 	cmdParams := map[string]any{
@@ -77,30 +88,20 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	cmdLine := []string{}
 	output.Status = STATUS_OK
 
-	if ws.Desc.CommandLine != "" {
-		commandLineBase := ws.Desc.CommandLine
-		commandLineText, err := raymond.Render(commandLineBase, cmdParams)
-		if err != nil {
-			logger.Error("Template error", "error", err)
-			output.Status = STATUS_FAIL
+	// Build command from executors (TES format)
+	if len(ws.Desc.Executors) > 0 {
+		// For now, we use the first executor. In the future, we may support sequential execution
+		executor := ws.Desc.Executors[0]
+
+		// Handle polymorphic command: can be string or array
+		if len(executor.Command) > 0 {
+			cmdLine = executor.Command
 		}
-		if output.Status != STATUS_FAIL {
-			cmdLine, err = shlex.Split(commandLineText)
-			if err != nil {
-				logger.Error("Template error", "error", err)
-				output.Status = STATUS_FAIL
-			}
-		}
-	} else if ws.Desc.Shell != "" {
-		commandLineBase := ws.Desc.Shell
-		commandLineText, err := raymond.Render(commandLineBase, cmdParams)
-		if err != nil {
-			logger.Error("Template error", "error", err)
-			output.Status = STATUS_FAIL
-		}
-		if output.Status != STATUS_FAIL {
-			cmdLine = []string{"bash", "-c", commandLineText}
-		}
+	}
+
+	if output.Status != STATUS_FAIL && len(cmdLine) == 0 {
+		logger.Error("No command specified in executors")
+		output.Status = STATUS_FAIL
 	}
 
 	if output.Status != STATUS_FAIL {
@@ -109,9 +110,9 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 
 			var outputDate time.Time
 			for _, o := range ws.GetOutputs() {
-				i, err := os.Stat(o.Abs())
-				if err == nil {
-					if i.ModTime().After(outputDate) {
+				for _, match := range resolveOutputMatches(o) {
+					i, err := os.Stat(match)
+					if err == nil && i.ModTime().After(outputDate) {
 						outputDate = i.ModTime()
 					}
 				}
@@ -139,32 +140,47 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 				//fmt.Printf("Running command: %s missing outputs: (%s)\n", cmdLine, strings.Join(notFound, ","))
 				inputs := []string{}
 				outputs := []string{}
-				for _, v := range ws.Desc.Inputs {
-					inputs = append(inputs, v)
+				for _, input := range ws.Desc.Inputs {
+					inputs = append(inputs, input.Path)
 				}
-				for _, v := range ws.Desc.Outputs {
-					outputs = append(outputs, v)
+				for _, output := range ws.Desc.Outputs {
+					outputs = append(outputs, output.Path)
 				}
+
+				// Get resource requirements
+				cpus := uint(1)
+				memMB := uint(1024)
+				image := ""
+				if ws.Desc.Resources != nil {
+					cpus = ws.Desc.Resources.CPUCores
+					if ws.Desc.Resources.RamGB > 0 {
+						memMB = uint(ws.Desc.Resources.RamGB * 1024)
+					}
+				}
+				if len(ws.Desc.Executors) > 0 {
+					image = ws.Desc.Executors[0].Image
+				}
+
 				toolCmd := runner.CommandLineTool{
 					CommandLine: cmdLine,
 					BaseDir:     ws.BaseDir,
-					MemMB:       ws.Desc.MemMB,
-					NCpus:       ws.Desc.NCpus,
-					Image:       ws.Desc.Image,
+					MemMB:       memMB,
+					NCpus:       cpus,
+					Image:       image,
 					Inputs:      inputs,
 					Outputs:     outputs,
 				}
 				_, err := ws.Workflow.Runner.RunCommand(&toolCmd)
 				if err == nil {
 					for k, v := range ws.GetOutputs() {
-						if !PathExists(v.Abs()) {
-							logger.Error("Missing output", "commandLine", cmdLine, "name", k, "path", v.Abs())
+						if len(resolveOutputMatches(v)) == 0 {
+							logger.Error("Missing output", "commandLine", fmt.Sprint(cmdLine), "name", k, "path", v.Abs())
 							output.Status = STATUS_FAIL
-							logger.AddSummaryError("Missing output", "commandLine", cmdLine, "name", k, "path", v.Abs())
+							logger.AddSummaryError("Missing output", "commandLine", fmt.Sprint(cmdLine), "name", k, "path", v.Abs())
 						}
 					}
 					if output.Status == STATUS_OK {
-						logger.Info("Command suceeded", "commandLine", cmdLine)
+						logger.Info("Command suceeded", "commandLine", fmt.Sprint(cmdLine))
 					}
 				} else {
 					output.Status = STATUS_FAIL
@@ -197,20 +213,43 @@ func (ws *WorkflowProcess) IsGenerator() bool {
 
 func (ws *WorkflowProcess) GetInputs() map[string]DataFile {
 	out := map[string]DataFile{}
-	for k, v := range ws.Desc.Inputs {
-		out[k] = DataFile{BaseDir: ws.BaseDir, RelPath: v}
+	for i, input := range ws.Desc.Inputs {
+		name := input.Name
+		if name == "" {
+			name = fmt.Sprintf("input_%d", i)
+		}
+		out[name] = DataFile{BaseDir: ws.BaseDir, RelPath: input.Path}
 	}
 	return out
 }
 
 func (ws *WorkflowProcess) GetOutputs() map[string]DataFile {
 	out := map[string]DataFile{}
-	for k, v := range ws.Desc.Outputs {
-		out[k] = DataFile{BaseDir: ws.BaseDir, RelPath: v}
+	for i, output := range ws.Desc.Outputs {
+		name := output.Name
+		if name == "" {
+			name = fmt.Sprintf("output_%d", i)
+		}
+		out[name] = DataFile{BaseDir: ws.BaseDir, RelPath: output.Path}
 	}
 	return out
 }
 
 func (ws *WorkflowProcess) GetDesc() string {
-	return fmt.Sprintf("run: %s", ws.Desc.CommandLine)
+	if len(ws.Desc.Executors) > 0 {
+		executor := ws.Desc.Executors[0]
+		if len(executor.Command) > 0 {
+			return fmt.Sprintf("run: %s", executor.Command)
+		}
+	}
+	return fmt.Sprintf("run: %s", ws.Desc.Name)
+}
+
+func resolveOutputMatches(output DataFile) []string {
+	pattern := output.Abs()
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return []string{}
+	}
+	return matches
 }

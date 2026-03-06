@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
-	"github.com/bmeg/lathe/scriptfile"
 )
 
 const (
@@ -66,7 +66,7 @@ func (w *Workflow) AddDepends(step WorkflowStep, dep WorkflowStep) error {
 
 /*****/
 
-func PrepWorkflow(wd *scriptfile.WorkflowDesc, run runner.CommandRunner) (*Workflow, error) {
+func PrepWorkflow(wd *jflow.WorkflowDesc, run runner.CommandRunner) (*Workflow, error) {
 	logger.Info("Building Workflow DAG")
 	wf := &Workflow{
 		Steps:  map[string]WorkflowStep{},

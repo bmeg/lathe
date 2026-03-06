@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/bmeg/lathe/scriptfile"
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/workflow"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ var Cmd = &cobra.Command{
 		//dstBase := args[1]
 		log.Printf("doing viz: %s\n", scriptPath)
 
-		wfs, err := scriptfile.RunFile(scriptPath)
+		wfs, err := jflow.RunFile(scriptPath)
 		if err != nil {
 			return err
 		}

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
-	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/lathe/util"
 	"github.com/spf13/cobra"
 )
@@ -58,7 +58,7 @@ var List = &cobra.Command{
 		logger.Init(verbose, jsonLog)
 
 		logger.Info("doing list")
-		workflows, err := scriptfile.RunFile(scriptPath)
+		workflows, err := jflow.RunFile(scriptPath)
 		if err != nil {
 			logger.Info("Script Error", "error", err)
 			return err
@@ -74,14 +74,15 @@ var List = &cobra.Command{
 					//fmt.Printf("step: %s\n", p.GetName())
 					proc := p.GetProcess()
 					if proc != nil {
-						for k, v := range proc.Outputs {
-							path := filepath.Join(p.GetBasePath(), v)
+						for _, output := range proc.Outputs {
+							// Output.Path is the full path
+							path := filepath.Join(p.GetBasePath(), output.Path)
 							if relPath != "" {
 								path, _ = filepath.Rel(relPath, path)
 							}
 							data := map[string]any{
 								"step":   p.GetName(),
-								"name":   k,
+								"name":   output.Name,
 								"path":   path,
 								"exists": util.Exists(path),
 							}
@@ -97,8 +98,9 @@ var List = &cobra.Command{
 				for _, p := range wf.Steps {
 					proc := p.GetProcess()
 					if proc != nil {
-						for _, v := range proc.Outputs {
-							path := filepath.Join(p.GetBasePath(), v)
+						for _, output := range proc.Outputs {
+							// Output.Path is the full path
+							path := filepath.Join(p.GetBasePath(), output.Path)
 							paths[path] = true
 						}
 					}
