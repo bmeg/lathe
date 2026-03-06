@@ -12,7 +12,7 @@ Welcome to the Lathe workflow engine documentation. This guide helps you navigat
   - Using callbacks for post-job analysis
   - Parameterized workflows
   - Multi-stage pipelines
-  - Sub-workflow composition
+  - Module import composition
   - Docker containerization
   - Dynamic workflow generation
   - Resource management
@@ -20,8 +20,8 @@ Welcome to the Lathe workflow engine documentation. This guide helps you navigat
 
 ### 📖 Complete Documentation
 
-- **[WORKFLOW_MODEL.md](WORKFLOW_MODEL.md)** - Complete API reference
-  - Global API (`lathe.*` functions)
+- **[JFLOW_STANDARD.md](JFLOW_STANDARD.md)** - Complete API reference
+  - Global API (`jflow.*` functions)
   - Type specifications
   - Schema documentation
   - Workflow composition patterns
@@ -34,7 +34,6 @@ Welcome to the Lathe workflow engine documentation. This guide helps you navigat
   - Execution patterns
   - Implementation details
   - Best practices
-  - Migration from old API
   - Troubleshooting guide
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Design and architecture
@@ -59,7 +58,6 @@ Welcome to the Lathe workflow engine documentation. This guide helps you navigat
   - All file changes
   - API changes
   - Type system updates
-  - Backward compatibility matrix
   - Testing status
   - Deployment checklist
 
@@ -87,7 +85,7 @@ Examples cover:
 
 ### I need the complete API reference
 
-👉 Go to: **[WORKFLOW_MODEL.md](WORKFLOW_MODEL.md)**
+👉 Go to: **[JFLOW_STANDARD.md](JFLOW_STANDARD.md)**
 
 Covers:
 - Global API functions
@@ -113,7 +111,6 @@ Get details about:
 - New features (futures, callbacks)
 - API enhancements
 - Type system changes
-- Backward compatibility
 
 ### I'm contributing or extending the engine
 
@@ -131,28 +128,27 @@ Get details about:
 ### Workflows
 A collection of jobs (processes) organized as a directed acyclic graph (DAG). Jobs can be executed in parallel if they have no dependencies.
 
-**Documentation**: See WORKFLOW_MODEL.md section "Workflow Composition"
+**Documentation**: See JFLOW_STANDARD.md section "Workflow Composition"
 
 ### Processes (Jobs)
 Individual tasks that execute commands, possibly in Docker containers. Can have inputs, outputs, resource requirements.
 
-**Documentation**: See WORKFLOW_MODEL.md section "ProcessSpec"
+**Documentation**: See JFLOW_STANDARD.md section "ProcessSpec"
 
 ### Futures
 Deferred result containers that return immediately from job declaration but resolve when the job completes. Enable asynchronous job submission.
 
-**Documentation**: See WORKFLOW_MODEL.md section "Futures and Callbacks"
+**Documentation**: See JFLOW_STANDARD.md section "Futures and Callbacks"
 
 ### Callbacks
 Functions executed after a job completes for post-job analysis, validation, or triggering dependent workflows.
 
-**Documentation**: See WORKFLOW_MODEL.md section "Post-Job Analysis with Callbacks"
+**Documentation**: See JFLOW_STANDARD.md section "Futures and Callbacks"
 
 ### Dependencies
 Automatically resolved through:
 1. **File dependencies**: Job B depends on A if B's input matches A's output
-2. **Explicit dependencies**: Can be specified in job declaration
-3. **File checks**: Jobs depend on any file checks that guarantee their inputs
+2. **File checks**: Jobs depend on any file checks that guarantee their inputs
 
 **Documentation**: See INTEGRATION_GUIDE.md section "How Futures Work"
 
@@ -161,7 +157,7 @@ Different backends for executing workflows:
 - **Local runner**: Execute on local machine using os.exec
 - **TES runner**: Execute via GA4GH TES API (cloud/HPC)
 
-**Documentation**: See WORKFLOW_MODEL.md section "Job Runners"
+**Documentation**: See JFLOW_STANDARD.md section "Job Runners"
 
 ---
 
@@ -170,32 +166,32 @@ Different backends for executing workflows:
 ### Create a simple workflow
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 1
-2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) ProcessSpec section
+2. Reference: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) ProcessSpec section
 3. Command: `lathe run workflow.js`
 
 ### Add error handling
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 3 and 5
-2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) Callbacks section
+2. Reference: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Futures and Callbacks section
 3. Use: `onComplete(job, function(result) {...})`
 
 ### Use parameters
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 4
-2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) Parameter section
+2. Reference: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Standard API section
 3. Use: `jflow.Params.paramName`
 
 ### Use Docker containers
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 7
-2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) DockerImage section
+2. Reference: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Standard API section
 3. Use: `image: "image:tag"` in Process spec
 
 ### Compose multiple workflows
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 6
-2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) LoadPlan section
-3. Use: `jflow.LoadPlan("sub.js")`
+2. Reference: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Standard API section
+3. Use: `jflow.Import("sub.js")`
 
 ### Deploy to cloud
 
@@ -215,7 +211,7 @@ jflow.File(spec)               // Reference file
 jflow.FileCheck(spec)          // File existence check
 jflow.Tool(spec)               // Tool template
 jflow.DockerImage(...)         // Docker image
-jflow.LoadPlan(path)           // Load sub-workflow
+jflow.Import(path)             // Import module exports
 jflow.Plugin(cmd)              // Execute external command
 onComplete(job, callback)      // Register callback
 jflow.Params                   // User parameters
@@ -223,40 +219,38 @@ print(x), println(x)           // Logging
 glob(pattern)                  // Path globbing
 ```
 
-**Full reference**: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) Global API section
+**Full reference**: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Standard API section
 
 ### Process Specification
 
 ```javascript
 {
-  name: "job_name",           // Optional - auto-generated if omitted
-  commandLine: "command",     // Required
-  image: "image:tag",         // Optional
-  cpus: 4,                    // Optional - default 1
-  memoryMB: 8192,            // Optional - default 1024
-  inputs: { "param": "path" }, // Optional
-  outputs: { "param": "path" }, // Optional
-  description: "..."         // Optional
+  name: "job_name",
+  description: "...",
+  executors: [{ image: "ubuntu:20.04", command: "echo ok > /tmp/out.txt" }],
+  inputs: [{ name: "input", path: "/tmp/in.txt" }],
+  outputs: [{ name: "out", path: "/tmp/out.txt" }],
+  resources: { cpu_cores: 1, ram_gb: 1 }
 }
 ```
 
-**Full reference**: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) ProcessSpec section
+**Full reference**: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) ProcessSpec section
 
 ### Callback Function Signature
 
 ```javascript
 onComplete(job, function(result) {
   result.jobName          // string
-  result.status.state     // "completed"|"failed"|"cancelled"
+  result.status.state     // TES-style states (e.g., "COMPLETE")
   result.status.exitCode  // integer
-  result.status.error     // string (if state != "completed")
+  result.status.error     // string
   result.outputFiles      // map of output files
   result.logs            // stdout/stderr logs
   result.metadata        // execution metadata
 });
 ```
 
-**Full reference**: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) JobResult section
+**Full reference**: [JFLOW_STANDARD.md](JFLOW_STANDARD.md) Futures and Callbacks section
 
 ---
 
@@ -267,7 +261,7 @@ onComplete(job, function(result) {
 **Check**:
 1. Is the script file valid JavaScript?
 2. Are all functions called with correct parameters?
-3. Check [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) for parameter requirements
+3. Check [JFLOW_STANDARD.md](JFLOW_STANDARD.md) for parameter requirements
 
 ### Problem: Jobs not running in dependency order
 
@@ -300,7 +294,7 @@ onComplete(job, function(result) {
 
 1. **Specify accurate resources**: Helps scheduler make better decisions
 2. **Use file dependencies**: Automatic dependency resolution is efficient
-3. **Organize with sub-workflows**: Logical organization improves maintainability
+3. **Organize with modules**: Importable components improve maintainability
 4. **Add callbacks selectively**: Only for important jobs
 5. **Test locally first**: Use local runner before cloud deployment
 
@@ -312,10 +306,10 @@ onComplete(job, function(result) {
 
 ### Source Code
 
-- `scriptfile/model.go` - Core type definitions (412 lines)
-- `scriptfile/js_vm.go` - JavaScript environment setup
-- `scriptfile/api.go` - Global API functions
-- `scriptfile/workflow.go` - Workflow composition
+- `jflow/model.go` - Core type definitions
+- `jflow/js_vm.go` - JavaScript environment setup
+- `jflow/api.go` - Global API functions
+- `jflow/workflow.go` - Workflow composition
 
 ### Examples Directory
 
@@ -337,7 +331,7 @@ Documentation
 │   └── QUICK_START.md (10 examples)
 │
 ├── Learning (understand concepts)
-│   ├── WORKFLOW_MODEL.md (API reference)
+│   ├── JFLOW_STANDARD.md (API reference)
 │   └── INTEGRATION_GUIDE.md (patterns)
 │
 ├── Deep Dive (architecture)
@@ -354,8 +348,7 @@ Documentation
 
 - **Engine Version**: Refactored (see REFACTORING_SUMMARY.md)
 - **Build Status**: ✅ All packages compile successfully
-- **Backward Compatibility**: ✅ 100% maintained
-- **Breaking Changes**: ⚠️ None
+- **API Status**: Prototype, evolving toward TES-first semantics
 
 ---
 
@@ -363,7 +356,7 @@ Documentation
 
 1. **New to Lathe?** → Start with [QUICK_START.md](QUICK_START.md)
 2. **Want examples?** → See QUICK_START.md or Examples directory
-3. **Need API reference?** → Check [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md)
+3. **Need API reference?** → Check [JFLOW_STANDARD.md](JFLOW_STANDARD.md)
 4. **Integrating Lathe?** → Read [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 5. **Understanding design?** → Review [ARCHITECTURE.md](ARCHITECTURE.md)
 6. **Migrating workflows?** → Check [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)

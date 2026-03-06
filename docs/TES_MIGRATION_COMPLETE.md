@@ -14,10 +14,10 @@ All type names have been cleaned up to remove the "TES" prefix:
 - `TESTask` → `Task`
 - `TESFileType` → `FileTypeEnum`
 
-**Location**: `scriptfile/tes_model.go`
+**Location**: `jflow/tes_model.go`
 
 ## State Constants Renamed
-All state constants in `scriptfile/tes_model.go` now use the `State` prefix:
+All state constants in `jflow/tes_model.go` now use the `State` prefix:
 
 ```go
 StateUnknown      State = "UNKNOWN"
@@ -33,7 +33,7 @@ StateCanceling    State = "CANCELING"
 StatePreempted    State = "PREEMPTED"
 ```
 
-## ProcessDesc Structure (scriptfile/model.go)
+## ProcessDesc Structure (jflow/model.go)
 Removed all legacy fields and now uses only TES-aligned fields:
 
 **Removed Fields:**
@@ -52,7 +52,7 @@ Removed all legacy fields and now uses only TES-aligned fields:
 - `Resources *ResourceRequirements` - Compute requirements
 - `Volumes []string` - Shared directories between executors
 
-## ResourceRequirements Structure (scriptfile/model.go)
+## ResourceRequirements Structure (jflow/model.go)
 Simplified to use only TES fields, removing legacy resource fields:
 
 **Removed Fields:**
@@ -71,7 +71,7 @@ Simplified to use only TES fields, removing legacy resource fields:
 - `Timeout uint` - Execution timeout
 - `Retries uint` - Number of retries
 
-## API Changes (scriptfile/api.go)
+## API Changes (jflow/api.go)
 Parser functions have been renamed to remove "TES" prefix:
 
 - `parseTESExecutor()` → `parseExecutor()`
@@ -184,8 +184,8 @@ If migrating from legacy format:
    ```
 
 ## Files Modified
-- `scriptfile/tes_model.go` - Type renames, state constants
-- `scriptfile/model.go` - ProcessDesc and ResourceRequirements structure
-- `scriptfile/api.go` - Parser function renames, legacy code removal
+- `jflow/tes_model.go` - Type renames, state constants
+- `jflow/model.go` - ProcessDesc and ResourceRequirements structure
+- `jflow/api.go` - Parser function renames, legacy code removal
 - `workflow/step_process.go` - Executor handling, array iteration
 - `cmd/outputs/main.go` - Output struct handling

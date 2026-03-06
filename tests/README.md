@@ -5,7 +5,7 @@ This directory contains a comprehensive unit testing framework for jflow workflo
 ## Overview
 
 The test suite includes:
-- **10 example workflows** covering different jflow features
+- **11 documented example workflows** covering current jflow features
 - **Go testing framework** for automated testing
 - **Test utilities** for running and validating workflows
 
@@ -22,9 +22,10 @@ All test examples are in the `test_examples/` directory:
 | 05 | `05_resource_specification.js` | Resource specs | CPU, memory, disk requirements |
 | 06 | `06_file_check.js` | File checking | FileCheck functionality |
 | 07 | `07_metadata_tags.js` | Metadata tags | TES tags for metadata |
-| 08 | `08_legacy_format.js` | Legacy format | Backward compatibility |
 | 09 | `09_workflow_params.js` | Parameters | Runtime parameter passing |
 | 10 | `10_complex_pipeline.js` | Complex pipeline | Multi-step data pipeline |
+| 11 | `11_tool_template_callable.js` | Tool templates | Callable tool templates, typed tool inputs |
+| 12 | `12_path_object_factories.js` | Path/Object | Path/Object constructors and value rendering |
 
 ## Running Tests
 

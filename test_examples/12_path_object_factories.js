@@ -30,7 +30,9 @@ const summarizeTool = jflow.Tool({
     commandLine: "echo local={{local}} > {{output}} && echo remote={{remote}} >> {{output}} && cat {{local}} >> {{output}}",
     image: "ubuntu:20.04",
     inputs: {
-        local: "local input file"
+        local: "File",
+        remote: "Value",
+        output: "Value"
     },
     outputs: {
         output: "{{output}}"

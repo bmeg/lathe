@@ -34,14 +34,12 @@ The Lathe workflow engine follows these principles:
 ## Project Structure
 
 ```
-scriptfile/          # JavaScript parsing and workflow building
+jflow/               # JavaScript parsing and workflow model building
 ├── model.go        # Central type definitions and interfaces
+├── tes_model.go    # TES-aligned task model types
 ├── js_vm.go        # Goja JavaScript runtime setup
 ├── api.go          # API functions exposed to JavaScript
-├── workflow.go     # Workflow composition logic
-├── process.go      # Kept for backward compatibility (empty)
-├── docker.go       # Kept for backward compatibility (empty)
-└── file_check.go   # Kept for backward compatibility (empty)
+└── workflow.go     # Workflow composition logic
 
 workflow/           # DAG execution and orchestration
 ├── workflow.go     # Workflow execution model
@@ -58,13 +56,13 @@ logger/             # Logging utilities
 examples/           # Example workflows
 
 docs/
-├── WORKFLOW_MODEL.md    # Complete API documentation
+├── JFLOW_STANDARD.md    # Complete API documentation (canonical)
 └── INTEGRATION_GUIDE.md # Integration and usage guide
 ```
 
 ## Key Components
 
-### 1. Centralized Object Model (`scriptfile/model.go`)
+### 1. Centralized Object Model (`jflow/model.go`)
 
 **Purpose**: Single source of truth for all workflow-related types
 
@@ -83,7 +81,7 @@ docs/
 - Include metadata maps for extensibility
 - Support multiple file types (local, S3, HTTP)
 
-### 2. JavaScript Environment (`scriptfile/js_vm.go`)
+### 2. JavaScript Environment (`jflow/js_vm.go`)
 
 **Purpose**: Initialize Goja runtime and set up jflow standard API
 
@@ -99,7 +97,7 @@ docs/
 - Parameters passed as `jflow.Params` map
 - Easy to add new global functions
 
-### 3. API Functions (`scriptfile/api.go`)
+### 3. API Functions (`jflow/api.go`)
 
 **Purpose**: Implement the global functions exposed to JavaScript
 
@@ -111,7 +109,7 @@ docs/
 - `Workflow(name)`: Create workflow
 - `DockerImage(...)`: Declare container image
 - `OnComplete(job, callback)`: Register callback
-- `LoadPlan(path)`: Load sub-workflow
+- `Import(path)`: Import module exports
 - `Plugin(command)`: Execute external command
 
 **Design Decisions**:
@@ -120,7 +118,7 @@ docs/
 - Support for both old and new parameter names (e.g., memMB → memoryMB)
 - Type conversion handles JavaScript number quirks (float64, int64, etc.)
 
-### 4. Workflow Composition (`scriptfile/workflow.go`)
+### 4. Workflow Composition (`jflow/workflow.go`)
 
 **Purpose**: Manage workflow steps and support Goja integration
 
@@ -132,7 +130,7 @@ docs/
 - `Add()` uses Goja's ConstructorCall to support object-oriented JS
 - Auto-generates step names if not provided
 - Supports multiple step types: ProcessDesc, FileCheck, WorkflowDesc
-- Can inline sub-workflows into parent
+- Can inline imported workflow modules into parent
 
 ### 5. Futures and Callbacks
 
@@ -332,7 +330,7 @@ onComplete(job, function(result) {
 - Basic job with inputs/outputs
 - Multiple dependent jobs
 - Parameterized workflows
-- Sub-workflow loading
+- Module import loading
 - Error handling scenarios
 
 ## Future Enhancements
@@ -357,15 +355,12 @@ onComplete(job, function(result) {
 
 ### Old Type Locations
 
-Three files kept for backward compatibility (empty shells):
-- `scriptfile/process.go`: ProcessDesc now in model.go
-- `scriptfile/docker.go`: DockerImage now in model.go
-- `scriptfile/file_check.go`: FileCheck now in model.go
+Backward compatibility is maintained through API aliasing (`lathe.*` and `jflow.*`).
 
 ### Migration Path
 
-- Old code importing from these files will still compile
-- New code should import from `model.go` directly
+- Old scripts using `lathe.*` continue to run
+- New code should use the `jflow` package and `jflow.*` API directly
 - All functionality preserved and enhanced
 
 ### API Changes

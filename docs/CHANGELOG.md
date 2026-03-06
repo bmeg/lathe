@@ -21,7 +21,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 
 ### Core Implementation Files
 
-#### 1. `scriptfile/model.go` - **NEW FILE - 412 lines**
+#### 1. `jflow/model.go` - **NEW FILE - 412 lines**
 
 **Purpose**: Centralized workflow object model with all type definitions
 
@@ -49,7 +49,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 
 ---
 
-#### 2. `scriptfile/js_vm.go` - **REFACTORED - 120 lines**
+#### 2. `jflow/js_vm.go` - **REFACTORED - 120 lines**
 
 **Before**: 
 - Basic RunFile function
@@ -69,12 +69,12 @@ Complete refactoring of the Lathe workflow engine to provide:
 - Separated parameter handling from basic execution
 - Centralized VM setup in dedicated function
 - Better error messages with context
-- Support for parameters in sub-workflows
+- Support for parameters in imported modules
 - Consistent logging throughout
 
 ---
 
-#### 3. `scriptfile/api.go` - **ENHANCED - 385 lines**
+#### 3. `jflow/api.go` - **ENHANCED - 385 lines**
 
 **Before**: 
 - Basic Process, File, Workflow APIs
@@ -100,7 +100,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 
 ---
 
-#### 4. `scriptfile/workflow.go` - **IMPROVED - 56 lines**
+#### 4. `jflow/workflow.go` - **IMPROVED - 56 lines**
 
 **Before**:
 - Basic Add method
@@ -120,42 +120,19 @@ Complete refactoring of the Lathe workflow engine to provide:
 - Support for multiple step types
 - Auto-generated names follow pattern: `{workflow}_step_{index}`
 - Better error messages for unsupported types
-- Support for inlining sub-workflows
+- Support for inlining imported workflow modules
 
 ---
 
-### Backward Compatibility Files
+### Backward Compatibility
 
-#### 5. `scriptfile/process.go` - **SIMPLIFIED**
-
-**Before**: Full ProcessDesc definition and interface implementations
-**After**: Empty shell with comment directing to model.go
-
-**Why**: ProcessDesc moved to centralized model.go, but file kept to not break imports
-
----
-
-#### 6. `scriptfile/docker.go` - **SIMPLIFIED**
-
-**Before**: DockerImage struct definition
-**After**: Empty shell with comment directing to model.go
-
-**Why**: DockerImage moved to centralized model.go, but file kept to not break imports
-
----
-
-#### 7. `scriptfile/file_check.go` - **SIMPLIFIED**
-
-**Before**: FileCheck struct and interface implementations
-**After**: Empty shell with comment directing to model.go
-
-**Why**: FileCheck moved to centralized model.go, but file kept to not break imports
+Compatibility is maintained through API behavior and namespace aliasing (`jflow.*` and `lathe.*`).
 
 ---
 
 ## Documentation Files Created
 
-### 1. `WORKFLOW_MODEL.md` - **NEW - Complete API Reference**
+### 1. `JFLOW_STANDARD.md` - **Canonical API Reference**
 
 **Sections**:
 - Overview of the workflow model
@@ -182,7 +159,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 - Docker container execution
 - Parameterized workflows
 - Reusable tool templates
-- Loading sub-workflows
+- Importing workflow modules
 - Dynamic workflow generation
 - Executing workflows (CLI and programmatic)
 - Implementation details
@@ -228,7 +205,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 3. Using Callbacks
 4. Parameterized Workflow
 5. Multi-Stage Workflow with Error Handling
-6. Sub-Workflows and Composition
+6. Module Imports and Composition
 7. Docker Container with Image Building
 8. Dynamic Workflow from Configuration
 9. Advanced Resource Management
@@ -272,7 +249,7 @@ Complete refactoring of the Lathe workflow engine to provide:
 | `jflow.Process()` | Added futures, better parsing, description | **Enhanced** |
 | `jflow.File()` | Added file types, metadata | **Enhanced** |
 | `jflow.DockerImage()` | Added build args, dockerfile path | **Enhanced** |
-| `jflow.LoadPlan()` | Better error handling, parameter passing | **Enhanced** |
+| `jflow.Import()` | Module import with explicit exports | **Enhanced** |
 | `jflow.Plugin()` | Better error handling, string fallback | **Enhanced** |
 
 ### Maintained for Compatibility
@@ -390,7 +367,7 @@ Step interface {
 
 | Document | Lines | Purpose |
 |----------|-------|---------|
-| WORKFLOW_MODEL.md | 500+ | Complete API reference |
+| JFLOW_STANDARD.md | 500+ | Complete API reference (canonical) |
 | INTEGRATION_GUIDE.md | 600+ | Usage guide and patterns |
 | ARCHITECTURE.md | 500+ | Design and architecture |
 | QUICK_START.md | 400+ | Practical examples |
@@ -434,7 +411,7 @@ Step interface {
 2. Use `cpus` parameter name
 3. Add callbacks for important jobs
 4. Specify file types explicitly
-5. Use sub-workflows for organization
+5. Use importable modules for organization
 6. Leverage Tool templates for reusable commands
 
 ---
@@ -474,7 +451,7 @@ For questions or issues:
 1. Check [QUICK_START.md](QUICK_START.md) for examples
 2. Review [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for patterns
 3. Read [ARCHITECTURE.md](ARCHITECTURE.md) for design details
-4. Check [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) for API reference
+4. Check [JFLOW_STANDARD.md](JFLOW_STANDARD.md) for API reference
 
 ---
 

@@ -3,6 +3,7 @@ package workflow
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/bmeg/flame"
@@ -51,7 +52,8 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 	outputsFound := 0
 	notFound := []string{}
 	for _, o := range ws.GetOutputs() {
-		if PathExists(o.Abs()) {
+		matches := resolveOutputMatches(o)
+		if len(matches) > 0 {
 			outputsFound++
 		} else {
 			notFound = append(notFound, o.RelPath)
@@ -108,9 +110,9 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 
 			var outputDate time.Time
 			for _, o := range ws.GetOutputs() {
-				i, err := os.Stat(o.Abs())
-				if err == nil {
-					if i.ModTime().After(outputDate) {
+				for _, match := range resolveOutputMatches(o) {
+					i, err := os.Stat(match)
+					if err == nil && i.ModTime().After(outputDate) {
 						outputDate = i.ModTime()
 					}
 				}
@@ -171,7 +173,7 @@ func (ws *WorkflowProcess) Process(key string, status []*WorkflowStatus) flame.K
 				_, err := ws.Workflow.Runner.RunCommand(&toolCmd)
 				if err == nil {
 					for k, v := range ws.GetOutputs() {
-						if !PathExists(v.Abs()) {
+						if len(resolveOutputMatches(v)) == 0 {
 							logger.Error("Missing output", "commandLine", fmt.Sprint(cmdLine), "name", k, "path", v.Abs())
 							output.Status = STATUS_FAIL
 							logger.AddSummaryError("Missing output", "commandLine", fmt.Sprint(cmdLine), "name", k, "path", v.Abs())
@@ -241,4 +243,13 @@ func (ws *WorkflowProcess) GetDesc() string {
 		}
 	}
 	return fmt.Sprintf("run: %s", ws.Desc.Name)
+}
+
+func resolveOutputMatches(output DataFile) []string {
+	pattern := output.Abs()
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return []string{}
+	}
+	return matches
 }

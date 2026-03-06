@@ -6,7 +6,7 @@ The Lathe workflow engine has been refactored to provide a cleaner, more extensi
 
 ## Key Changes
 
-### 1. Centralized Workflow Object Model (`scriptfile/model.go`)
+### 1. Centralized Workflow Object Model (`jflow/model.go`)
 
 **Created a comprehensive, centralized type system** with all workflow-related classes:
 
@@ -41,7 +41,7 @@ The Lathe workflow engine has been refactored to provide a cleaner, more extensi
   - `Step`: Type-safe interface for workflow steps
   - Implemented by `ProcessDesc`, `FileCheck`
 
-### 2. Refined JavaScript Environment (`scriptfile/js_vm.go`)
+### 2. Refined JavaScript Environment (`jflow/js_vm.go`)
 
 **Enhanced the JavaScript VM setup** with better organization:
 
@@ -59,9 +59,9 @@ The Lathe workflow engine has been refactored to provide a cleaner, more extensi
 - **Better Error Handling**
   - Detailed error messages
   - Path resolution for relative paths
-  - Sub-workflow parameter inheritance
+  - Module import parameter inheritance
 
-### 3. Enhanced API Functions (`scriptfile/api.go`)
+### 3. Enhanced API Functions (`jflow/api.go`)
 
 **Refactored and expanded API** to expose new capabilities:
 
@@ -101,7 +101,7 @@ The Lathe workflow engine has been refactored to provide a cleaner, more extensi
   - Path resolution improvements
   - Error handling
 
-### 4. Workflow Composition (`scriptfile/workflow.go`)
+### 4. Workflow Composition (`jflow/workflow.go`)
 
 **Improved workflow step management**:
 
@@ -144,19 +144,13 @@ proc.ExecuteCallback(result)
 
 ### 6. Backward Compatibility
 
-**Three files kept as empty shells** for backward compatibility:
-
-- `scriptfile/process.go`: ProcessDesc moved to model.go
-- `scriptfile/docker.go`: DockerImage moved to model.go
-- `scriptfile/file_check.go`: FileCheck moved to model.go
-
-All old code continues to work; new code uses centralized model.
+Compatibility is maintained through API-level behavior in the `jflow` package and the `lathe` namespace alias.
 
 ## Documentation
 
 ### Created Three Comprehensive Guides
 
-1. **[WORKFLOW_MODEL.md](WORKFLOW_MODEL.md)**
+1. **[JFLOW_STANDARD.md](JFLOW_STANDARD.md)**
    - Complete API reference
    - Type specifications
    - Schema documentation
@@ -232,7 +226,7 @@ wf.Add(job);
 
 1. Replace `memMB` with `memoryMB` (or keep both, old names still supported)
 2. Replace `ncpus` with `cpus` (or keep both, old names still supported)
-3. Import types from `scriptfile` (no change needed if already importing)
+3. Import types from `jflow`
 
 ### For New Code
 
@@ -250,7 +244,7 @@ wf.Add(job);
 
 ## Testing
 
-- Verified scriptfile package compiles
+- Verified jflow package compiles
 - Verified workflow package compiles
 - Verified full project builds
 - All type definitions verified
@@ -261,24 +255,22 @@ wf.Add(job);
 1. **Update existing workflows**: Migrate parameter names if desired
 2. **Add callbacks to workflows**: Leverage post-job analysis capabilities
 3. **Use parameters**: Pass workflow parameters via command line
-4. **Use sub-workflows**: Organize large workflows using LoadPlan
+4. **Use modules**: Organize large workflows using Import and explicit exports
 5. **Implement callbacks**: Add post-job validation and analysis
 
 ## Files Modified
 
 ### Core Implementation
-- `scriptfile/model.go` - **Created** (centralized model)
-- `scriptfile/js_vm.go` - **Refactored** (better VM setup)
-- `scriptfile/api.go` - **Enhanced** (new APIs, better error handling)
-- `scriptfile/workflow.go` - **Improved** (better composition support)
+- `jflow/model.go` - **Created** (centralized model)
+- `jflow/js_vm.go` - **Refactored** (better VM setup)
+- `jflow/api.go` - **Enhanced** (new APIs, better error handling)
+- `jflow/workflow.go` - **Improved** (better composition support)
 
 ### Backward Compatibility
-- `scriptfile/process.go` - **Updated** (empty shell with comment)
-- `scriptfile/docker.go` - **Updated** (empty shell with comment)
-- `scriptfile/file_check.go` - **Updated** (empty shell with comment)
+- API compatibility maintained through namespace aliasing (`lathe.*` and `jflow.*`)
 
 ### Documentation
-- `WORKFLOW_MODEL.md` - **Created** (complete API reference)
+- `JFLOW_STANDARD.md` - **Canonical** (complete API reference)
 - `INTEGRATION_GUIDE.md` - **Created** (usage guide)
 - `ARCHITECTURE.md` - **Created** (design documentation)
 

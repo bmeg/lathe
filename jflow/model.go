@@ -160,10 +160,10 @@ type ToolCommand struct {
 	// Shell is the shell interpreter to use (sh, bash, etc). If empty, command is executed directly.
 	Shell string `json:"shell,omitempty"`
 
-	// Inputs maps input parameter names to their file paths/locations
+	// Inputs maps input parameter names to input kinds (File or Value)
 	Inputs map[string]string `json:"inputs"`
 
-	// Outputs maps output parameter names to their file paths/locations
+	// Outputs maps output parameter names to glob patterns used to find files after execution
 	Outputs map[string]string `json:"outputs"`
 
 	// Image specifies the Docker image to run this command in
@@ -178,6 +178,11 @@ type ToolCommand struct {
 	// Metadata for this tool
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
+
+const (
+	ToolInputKindFile  = "File"
+	ToolInputKindValue = "Value"
+)
 
 // ============================================================================
 // Job/Process Definition

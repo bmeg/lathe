@@ -9,7 +9,6 @@ Workflow files are written in JavaScript using the jflow API.
 ## Key Features
 
 - ✨ **TES API Alignment**: Compatible with GA4GH TES specification
-- 🔄 **Backward Compatible**: Legacy jflow syntax still supported
 - 🎯 **Polymorphic Commands**: Use strings or arrays for command specifications
 - 🔗 **Multi-Executor Tasks**: Run sequential commands in the same task
 - 🏷️ **Rich Metadata**: TES-style tags and resource specifications
@@ -18,24 +17,7 @@ Workflow files are written in JavaScript using the jflow API.
 
 ## Quick Start
 
-### Legacy Format (Still Supported)
-```javascript
-const pipeline = jflow.Workflow("data_pipeline");
-
-const job = jflow.Process({
-    name: "analyze",
-    commandLine: "python analyze.py input.csv > output.csv",
-    image: "python:3.11",
-    inputs: { data: "input.csv" },
-    outputs: { result: "output.csv" },
-    cpus: 4,
-    memoryMB: 8192
-});
-
-pipeline.Add(job);
-```
-
-### TES-Aligned Format (Recommended)
+### TES-Aligned Format
 ```javascript
 const pipeline = jflow.Workflow("data_pipeline");
 
@@ -78,10 +60,10 @@ pipeline.Add(job);
 
 ## Documentation
 
-- **[TES Alignment Guide](TES_ALIGNMENT_GUIDE.md)**: Comprehensive guide to TES format and migration
-- **[jflow Standard](JFLOW_STANDARD.md)**: Complete jflow API specification
-- **[Quick Start](QUICK_START.md)**: Getting started guide
-- **[Architecture](ARCHITECTURE.md)**: System architecture overview
+- **[TES Alignment Guide](docs/TES_ALIGNMENT_GUIDE.md)**: Comprehensive TES format guide
+- **[jflow Standard](docs/JFLOW_STANDARD.md)**: Complete jflow API specification
+- **[Quick Start](docs/QUICK_START.md)**: Getting started guide
+- **[Architecture](docs/ARCHITECTURE.md)**: System architecture overview
 
 Example:
 ```javascript
@@ -112,8 +94,15 @@ projects.forEach( (element, index) => {
 
 p = jflow.Process({
     name: "download",
-    commandLine: `cwltool --outdir ../../source/pharmacodb/rdata ./download_pharmaco.cwl`,
-    outputs: downloadOutputs
+    executors: [{
+        image: "cwltool:latest",
+        command: `cwltool --outdir ../../source/pharmacodb/rdata ./download_pharmaco.cwl`
+    }],
+    outputs: Object.entries(downloadOutputs).map(([name, path]) => ({ name, path })),
+    resources: {
+        cpu_cores: 1,
+        ram_gb: 2
+    }
 })
 prep.Add(p)
 ```
@@ -124,36 +113,27 @@ The jflow global object provides the following functions:
 ```
 	Params: map[string]string{}
 	Workflow:    function(name)
-	LoadPlan:    function(path)
-	Process:     function(Process)  // Supports both legacy and TES formats
+    Import:      function(path)
+    Process:     function(Process)
 	File:        function(path)
 	Plugin:      function(commandLine)
 	DockerImage: function(path)
+    GetParams:   function(schema)
+    Path:        function(name)
+    Object:      function(name)
 ```
 
 
 ## Process Object
 
-### Legacy Format
-```
-	BasePath    string
-	Name        string
-	Desc        map[string]any
-	CommandLine string
-	Inputs      map[string]string
-	Outputs     map[string]string
-	MemMB       uint
-	NCpus       uint
-```
-
 ### TES Format (GA4GH Aligned)
 ```
 	Name        string
 	Description string
-	Executors   []TESExecutor     // Sequential commands in containers
-	TESInputs   []TESInput        // Input files with URLs
-	TESOutputs  []TESOutput       // Output files with destinations
-	Resources   *TESResources     // CPU, RAM, disk specifications
+    Executors   []Executor        // Commands in containers
+    Inputs      []Input           // Input files with URLs
+    Outputs     []Output          // Output files with destinations
+    Resources   *Resources        // CPU, RAM, disk specifications
 	Volumes     []string          // Shared volumes
 	Tags        map[string]string // Metadata
 ```

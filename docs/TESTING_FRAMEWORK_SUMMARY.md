@@ -19,7 +19,7 @@ Ten quick-running jflow workflow examples covering different features:
 | 05 | `05_resource_specification.js` | CPU, memory, and disk requirements | ~2-5s |
 | 06 | `06_file_check.js` | File existence checking with FileCheck | ~3-6s |
 | 07 | `07_metadata_tags.js` | TES tags for task metadata | ~2-5s |
-| 08 | `08_legacy_format.js` | Backward compatibility with legacy format | ~2-5s |
+| 08 | `08_legacy_format.js` | Parser regression coverage (non-canonical) | ~2-5s |
 | 09 | `09_workflow_params.js` | Runtime parameter passing via jflow.Params | ~2-5s |
 | 10 | `10_complex_pipeline.js` | Multi-step data processing pipeline | ~5-15s |
 
@@ -137,7 +137,7 @@ The test suite comprehensively covers:
 - ✅ Resource specifications (CPU, RAM, disk)
 - ✅ File existence checking
 - ✅ TES metadata tags
-- ✅ Legacy format backward compatibility
+- ✅ Compatibility regression coverage
 - ✅ Runtime parameters
 - ✅ Complex data pipelines
 
@@ -230,7 +230,7 @@ Recommended enhancements:
 2. Add tests for error conditions
 3. Add integration with TES server mode
 4. Add tests for Docker image building
-5. Add tests for workflow composition (`jflow.LoadPlan`)
+5. Add tests for workflow composition (`jflow.Import`)
 6. Add performance regression testing
 7. Add code coverage reporting
 

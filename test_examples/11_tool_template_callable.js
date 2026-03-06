@@ -30,7 +30,9 @@ const matrixTool = jflow.Tool({
     commandLine: "cat {{input1}} > {{output1}} && echo {{param1}} >> {{output1}}",
     image: "ubuntu:20.04",
     inputs: {
-        input1: "matrix input"
+        input1: "File",
+        param1: "Value",
+        output1: "Value"
     },
     outputs: {
         output1: "{{output1}}"

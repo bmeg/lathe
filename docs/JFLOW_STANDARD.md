@@ -29,6 +29,8 @@ jflow.Process(spec: ProcessSpec): ProcessDesc
 // File operations
 jflow.File(spec: FileSpec): File
 jflow.FileCheck(spec: FileCheckSpec): FileCheck
+jflow.Path(name: string): (path: string) => File
+jflow.Object(name: string): (uri: string) => File
 
 // Tool templates
 jflow.Tool(spec: ToolSpec): ToolCommand
@@ -37,13 +39,14 @@ jflow.Tool(spec: ToolSpec): ToolCommand
 jflow.DockerImage(baseDir: string, tag: string, dockerfile?: string, buildArgs?: object): void
 
 // Workflow composition
-jflow.LoadPlan(path: string): object
+jflow.Import(path: string, paramsOverride?: object): object
 
 // Extensibility
 jflow.Plugin(command: string): any
 
 // Runtime parameters
 jflow.Params: object
+jflow.GetParams(schema: object): object
 ```
 
 ### Global Utilities
@@ -64,22 +67,8 @@ onComplete(job: ProcessDesc, callback: (result: JobResult) => void): void
 
 ### ProcessSpec
 
-jflow supports both legacy format and TES (Task Execution Service) aligned format for maximum compatibility.
+jflow supports TES (Task Execution Service) aligned format for maximum compatibility.
 
-#### Legacy Format
-```typescript
-interface ProcessSpec {
-  commandLine: string;      // Required: Command to execute (string or array)
-  name?: string;            // Job name
-  description?: string;     // Human-readable description
-  shell?: string;           // Shell interpreter
-  image?: string;           // Container image
-  inputs?: object;          // Input file mappings (key-value)
-  outputs?: object;         // Output file mappings (key-value)
-  cpus?: number;            // CPU cores
-  memoryMB?: number;        // Memory in MB
-}
-```
 
 #### TES-Aligned Format (GA4GH TES API v1.1.0)
 ```typescript
@@ -88,14 +77,14 @@ interface ProcessSpec {
   description?: string;     // Task description
   
   // TES-aligned arrays
-  executors: Executor[];    // Required: Array of executors to run sequentially
-  inputs?: TESInput[];      // Array of input files
-  outputs?: TESOutput[];    // Array of output files
+  executors: Executor[];    // Array of executors
+  inputs?: Input[];         // Array of input files
+  outputs?: Output[];       // Array of output files
   volumes?: string[];       // Shared volumes between executors
   
   // TES-aligned resources
-  resources?: TESResources; // Compute resources
-  tags?: object;            // Arbitrary key-value metadata
+  resources?: Resources;    // Compute resources
+  tags?: Record<string, string>; // Arbitrary key-value metadata
 }
 
 interface Executor {
@@ -105,11 +94,11 @@ interface Executor {
   stdin?: string;           // Stdin file path
   stdout?: string;          // Stdout file path
   stderr?: string;          // Stderr file path
-  env?: object;             // Environment variables
+  env?: Record<string, string>; // Environment variables
   ignore_error?: boolean;   // Continue on error
 }
 
-interface TESInput {
+interface Input {
   name?: string;            // Input name
   description?: string;     // Input description
   url?: string;             // Source URL (s3://, gs://, file://, http://)
@@ -118,25 +107,29 @@ interface TESInput {
   type?: "FILE" | "DIRECTORY";
 }
 
-interface TESOutput {
+interface Output {
   name?: string;            // Output name
   description?: string;     // Output description
-  url: string;              // Required: Destination URL
+  url?: string;             // Optional in local execution, required by TES backends
   path: string;             // Required: Path in container (absolute)
   path_prefix?: string;     // Prefix for wildcard outputs
   type?: "FILE" | "DIRECTORY";
 }
 
-interface TESResources {
+interface Resources {
   cpu_cores?: number;       // Number of CPU cores
   ram_gb?: number;          // Memory in gigabytes
   disk_gb?: number;         // Disk space in gigabytes
   preemptible?: boolean;    // Allow preemptible/spot instances
   zones?: string[];         // Compute zones
-  backend_parameters?: object; // Backend-specific parameters
+  backend_parameters?: Record<string, string>; // Backend-specific parameters
   backend_parameters_strict?: boolean; // Fail on unsupported params
+  timeout?: number;         // Optional jflow extension (seconds)
+  retries?: number;         // Optional jflow extension
 }
 ```
+
+Implementation note (Lathe): the data model accepts multiple executors, and TES backends may run them sequentially. The current local workflow runner executes the first executor.
 
 #### Polymorphic Command Support
 
@@ -151,19 +144,12 @@ jflow.Process({
   }]
 })
 
-// Array format (TES native)
+// Array format
 jflow.Process({
   executors: [{
     image: "ubuntu:20.04",
     command: ["/bin/bash", "-c", "echo hello world > output.txt"]
   }]
-})
-
-// Legacy format also supports both
-jflow.Process({
-  commandLine: "echo hello",  // String format
-  // OR
-  commandLine: ["echo", "hello"]  // Array format
 })
 ```
 
@@ -190,8 +176,8 @@ interface ToolSpec {
   commandLine: string;      // Required: Command template
   shell?: string;
   image?: string;
-  inputs?: object;
-  outputs?: object;
+  inputs?: Record<string, "File" | "Value">; // Template variable name -> input kind
+  outputs?: Record<string, string>; // Output name -> glob pattern, templated with input values
   resources?: ResourceSpec;
   metadata?: object;
 }
@@ -201,7 +187,7 @@ interface ToolSpec {
 
 A jflow-compliant workflow engine MUST:
 
-1. Provide a JavaScript runtime (ES5 or higher)
+1. Provide a JavaScript runtime (ES6 or higher)
 2. Implement all core `jflow.*` functions
 3. Support the standard type specifications
 4. Resolve file-based dependencies automatically
@@ -224,35 +210,7 @@ A jflow-compliant workflow engine MAY:
 4. Implement custom plugin systems
 5. Add engine-specific optimizations
 
-## Compatibility
-
-Implementations may choose to provide backward compatibility with legacy namespace conventions. For example, Lathe supports both `jflow.*` and `lathe.*` namespaces, making existing workflows compatible with the new standard.
-
 ## Example Workflow
-
-### Legacy Format
-```javascript
-// jflow-compliant workflow (legacy format)
-const pipeline = jflow.Workflow("data_pipeline");
-
-// Check inputs
-pipeline.Add(jflow.FileCheck({
-  file: { path: "input.csv" }
-}));
-
-// Process data
-const cleanJob = jflow.Process({
-  name: "clean_data",
-  commandLine: "python clean.py input.csv > cleaned.csv",
-  image: "python:3.11",
-  inputs: { raw: "input.csv" },
-  outputs: { cleaned: "cleaned.csv" },
-  cpus: 2,
-  memoryMB: 4096
-});
-
-pipeline.Add(cleanJob);
-```
 
 ### TES-Aligned Format
 ```javascript
@@ -264,7 +222,7 @@ const cleanJob = jflow.Process({
   name: "clean_data",
   description: "Clean and normalize input data",
   
-  // TES executors (run sequentially)
+  // TES executors
   executors: [{
     image: "python:3.11",
     command: "python clean.py /data/input.csv > /data/cleaned.csv",  // String or array
@@ -311,40 +269,6 @@ const cleanJob = jflow.Process({
 
 pipeline.Add(cleanJob);
 
-// Multi-executor example (sequential execution)
-const multiStepJob = jflow.Process({
-  name: "multi_step_analysis",
-  
-  executors: [
-    {
-      image: "python:3.11",
-      command: ["python", "preprocess.py", "/data/input.csv", "/data/preprocessed.csv"]
-    },
-    {
-      image: "r-base:4.2",
-      command: "Rscript analyze.R /data/preprocessed.csv /data/results.csv"
-    },
-    {
-      image: "python:3.11",
-      command: ["python", "visualize.py", "/data/results.csv", "/data/report.html"]
-    }
-  ],
-  
-  inputs: [{
-    url: "s3://my-bucket/data.csv",
-    path: "/data/input.csv"
-  }],
-  
-  outputs: [{
-    url: "s3://my-bucket/report.html",
-    path: "/data/report.html"
-  }],
-  
-  volumes: ["/data"]
-});
-
-pipeline.Add(multiStepJob);
-
 // Add callback
 onComplete(cleanJob, function(result) {
   if (result.status.exitCode === 0) {
@@ -354,6 +278,123 @@ onComplete(cleanJob, function(result) {
   }
 });
 ```
+
+## Workflow Composition
+
+### Adding Steps to a Workflow
+
+```javascript
+const wf = jflow.Workflow("myworkflow");
+
+// Add a process
+const job1 = jflow.Process({ /* ... */ });
+wf.Add(job1);
+
+// Add a file check
+const check = jflow.FileCheck({ /* ... */ });
+wf.Add(check);
+
+// Add another job (dependency inferred via shared file path)
+const job2 = jflow.Process({
+  name: "process2",
+  executors: [{
+    image: "ubuntu:20.04",
+    command: "wc -l /data/output.sam > /data/count.txt"
+  }],
+  inputs: [{ name: "data", path: "/data/output.sam" }]
+});
+wf.Add(job2);
+
+// Add a workflow exported from an imported module
+const sub = jflow.Workflow("sub");
+const subJob = jflow.Process({ /* ... */ });
+sub.Add(subJob);
+wf.Add(sub);
+```
+
+### Dependency Resolution
+
+Dependencies are automatically resolved based on:
+
+1. **File dependencies**: If job B's input path matches job A's output path, B depends on A.
+2. **File checks**: Jobs depend on file-check steps that guarantee required input files exist.
+
+## Futures and Callbacks
+
+### Getting a Future for a Job
+
+Every process has a future that resolves when execution completes:
+
+```javascript
+const job = jflow.Process({
+  name: "my_job",
+  executors: [{
+    image: "ubuntu:20.04",
+    command: "echo hello > /tmp/output.txt"
+  }],
+  outputs: [{ name: "message", path: "/tmp/output.txt" }]
+});
+
+const jobFuture = job.GetFuture();
+```
+
+### Callback Result Shape
+
+```typescript
+interface JobResult {
+  jobName: string;
+  status: JobStatus;
+  outputFiles: object;
+  logs: object;
+  metadata: object;
+}
+
+interface JobStatus {
+  state: "UNKNOWN" | "QUEUED" | "INITIALIZING" | "RUNNING" | "PAUSED" | "COMPLETE" | "EXECUTOR_ERROR" | "SYSTEM_ERROR" | "CANCELED" | "CANCELING" | "PREEMPTED";
+  exitCode: number;
+  error?: string;
+  startTime?: Date;
+  endTime?: Date;
+  metadata?: object;
+}
+```
+
+## Running Workflows
+
+```bash
+# Execute workflow script with default parameters
+lathe run workflow.js
+
+# Execute with inline parameters
+lathe run workflow.js --params mode=test --params threads=8
+
+# Execute with parameter file
+lathe run workflow.js --params-file params.yaml
+```
+
+Parameters are accessible in scripts through `jflow.Params` and can be validated with `jflow.GetParams`.
+
+## Job Runners
+
+jflow implementations (including Lathe) can support multiple backends:
+
+1. **Local Runner**
+   - Executes commands on the local machine.
+   - Suitable for development and single-machine execution.
+2. **TES Runner**
+   - Executes tasks through GA4GH TES backends.
+   - Suitable for cloud/HPC environments.
+
+Both backends consume the same jflow workflow model.
+
+## Notes and Best Practices
+
+1. Use meaningful process names for easier debugging.
+2. Prefer file-based dependencies over manual orchestration.
+3. Set realistic resources (`cpu_cores`, `ram_gb`, `disk_gb`) for scheduling.
+4. Use callbacks for post-job validation and reporting.
+5. Use `Import` + explicit exports for modular workflows.
+6. Validate user parameters early with `GetParams`.
 
 ## Implementations
 
@@ -367,13 +408,13 @@ onComplete(cleanJob, function(result) {
 - Resource management
 - Callback system
 - Parameter passing
-- Sub-workflow composition
+- Module import composition
 
 ## Versioning
 
 This document describes jflow version 1.0.
 
-Future versions will maintain backward compatibility where possible and clearly document any breaking changes.
+Future versions will evolve the standard and clearly document any breaking changes.
 
 ## Contributing
 

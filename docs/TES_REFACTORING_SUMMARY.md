@@ -8,7 +8,7 @@ The jflow workflow object model has been successfully refactored to align with t
 
 ### 1. New TES-Aligned Data Structures
 
-**File: `scriptfile/tes_model.go`** (NEW)
+**File: `jflow/tes_model.go`** (NEW)
 - `TESTask`: Complete TES task specification
 - `TESExecutor`: Container command execution definition
 - `TESInput`: Input file specification with URL support
@@ -20,7 +20,7 @@ The jflow workflow object model has been successfully refactored to align with t
 
 ### 2. Enhanced Core Model
 
-**File: `scriptfile/model.go`** (MODIFIED)
+**File: `jflow/model.go`** (MODIFIED)
 - `ProcessDesc`: Extended to support both legacy and TES formats
   - Added `TESExecutors []TESExecutor`
   - Added `TESInputs []TESInput`
@@ -45,7 +45,7 @@ The jflow workflow object model has been successfully refactored to align with t
 
 ### 3. Updated API Layer
 
-**File: `scriptfile/api.go`** (MODIFIED)
+**File: `jflow/api.go`** (MODIFIED)
 - `Process()`: Enhanced to parse both formats
   - TES executor arrays
   - TES input/output arrays

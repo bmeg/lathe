@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -15,6 +16,11 @@ import (
 )
 
 var toolTemplatePattern = regexp.MustCompile(`\{\{\s*([a-zA-Z0-9_]+)\s*\}\}`)
+
+var (
+	exportDeclPattern = regexp.MustCompile(`(?m)^\s*export\s+(const|let|var|function|class)\s+([A-Za-z_$][\w$]*)`)
+	exportListPattern = regexp.MustCompile(`(?m)^\s*export\s*\{([^}]*)\}\s*;?\s*$`)
+)
 
 // Process creates a new ProcessDesc (job) from a JavaScript object declaration
 // Uses GA4GH TES-aligned format
@@ -198,7 +204,11 @@ func (pl *Plan) Tool(data map[string]any) goja.Value {
 	if inputs, ok := data["inputs"].(map[string]any); ok {
 		for k, v := range inputs {
 			if vStr, ok := v.(string); ok {
-				tool.Inputs[k] = vStr
+				if normalized, valid := normalizeToolInputKind(vStr); valid {
+					tool.Inputs[k] = normalized
+				} else {
+					logger.Error("Invalid tool input kind", "input", k, "kind", vStr, "validKinds", []string{ToolInputKindFile, ToolInputKindValue})
+				}
 			}
 		}
 	}
@@ -328,9 +338,12 @@ func buildToolInputs(tool *ToolCommand, values map[string]any) []Input {
 	inputs := []Input{}
 
 	if len(tool.Inputs) > 0 {
-		for key := range tool.Inputs {
+		for key, inputKind := range tool.Inputs {
+			if inputKind == ToolInputKindValue {
+				continue
+			}
 			if value, ok := values[key]; ok {
-				if input, ok := valueToInput(key, value); ok {
+				if input, ok := valueToToolInput(key, value); ok {
 					inputs = append(inputs, input)
 				}
 			}
@@ -339,7 +352,7 @@ func buildToolInputs(tool *ToolCommand, values map[string]any) []Input {
 	}
 
 	for key, value := range values {
-		if input, ok := valueToInput(key, value); ok {
+		if input, ok := valueToToolInput(key, value); ok {
 			inputs = append(inputs, input)
 		}
 	}
@@ -350,13 +363,7 @@ func buildToolInputs(tool *ToolCommand, values map[string]any) []Input {
 func buildToolOutputs(tool *ToolCommand, values map[string]any, templateValues map[string]string) []Output {
 	outputs := []Output{}
 	for key, spec := range tool.Outputs {
-		path := ""
-		if value, ok := values[key]; ok {
-			path = stringifyTemplateValue(value)
-		}
-		if path == "" {
-			path = renderToolTemplate(spec, templateValues)
-		}
+		path := renderToolTemplate(spec, templateValues)
 		if path == "" {
 			continue
 		}
@@ -365,11 +372,25 @@ func buildToolOutputs(tool *ToolCommand, values map[string]any, templateValues m
 	return outputs
 }
 
-func valueToInput(name string, value any) (Input, bool) {
+func valueToToolInput(name string, value any) (Input, bool) {
+	if path, ok := value.(string); ok && path != "" {
+		return Input{Name: name, Path: path}, true
+	}
 	if file := fileFromValue(value); file != nil {
 		return Input{Name: name, Path: file.Path}, true
 	}
 	return Input{}, false
+}
+
+func normalizeToolInputKind(kind string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(kind)) {
+	case strings.ToLower(ToolInputKindValue):
+		return ToolInputKindValue, true
+	case strings.ToLower(ToolInputKindFile):
+		return ToolInputKindFile, true
+	default:
+		return "", false
+	}
 }
 
 func fileFromValue(value any) *File {
@@ -683,22 +704,146 @@ func (pl *Plan) OnComplete(proc *ProcessDesc, callback goja.Value) error {
 	return nil
 }
 
-// LoadPlan loads and executes a sub-workflow script from an external file
-func (pl *Plan) LoadPlan(path string) map[string]*WorkflowDesc {
-	logger.Debug("Loading sub-workflow", "path", path)
+// Import loads and executes another jflow script in an isolated namespace,
+// returning only explicitly exported values.
 
-	// Resolve relative paths against the current script directory
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(filepath.Dir(pl.Path), path)
+func cloneParams(params map[string]any) map[string]any {
+	if params == nil {
+		return map[string]any{}
+	}
+	out := make(map[string]any, len(params))
+	for k, v := range params {
+		out[k] = v
+	}
+	return out
+}
+
+func (pl *Plan) Import(call goja.FunctionCall) goja.Value {
+	if len(call.Arguments) < 1 {
+		logger.Error("Import requires at least one argument: path")
+		return pl.VM.ToValue(map[string]any{})
 	}
 
-	subplan, err := RunFileWithParams(path, pl.Parameters)
+	path := call.Arguments[0].String()
+	paramsOverride := map[string]any{}
+	if len(call.Arguments) > 1 && !goja.IsUndefined(call.Arguments[1]) && !goja.IsNull(call.Arguments[1]) {
+		if err := pl.VM.ExportTo(call.Arguments[1], &paramsOverride); err != nil {
+			logger.Error("Import params override must be an object", "path", path, "error", err)
+			return pl.VM.ToValue(map[string]any{})
+		}
+	}
+
+	modulePath := path
+	if !filepath.IsAbs(modulePath) {
+		modulePath = filepath.Join(filepath.Dir(pl.Path), modulePath)
+	}
+
+	absPath, err := filepath.Abs(modulePath)
 	if err != nil {
-		logger.Error("Error loading sub-workflow", "path", path, "error", err)
-		return map[string]*WorkflowDesc{}
+		logger.Error("Import path resolution error", "path", path, "error", err)
+		return pl.VM.ToValue(map[string]any{})
 	}
 
-	return subplan.Workflows
+	source, err := os.ReadFile(absPath)
+	if err != nil {
+		logger.Error("Import read error", "path", absPath, "error", err)
+		return pl.VM.ToValue(map[string]any{})
+	}
+
+	transformed := transformExportStatements(string(source))
+	wrapped := "(function(){\nvar __exports = {};\n" + transformed + "\nreturn __exports;\n})()"
+
+	oldPath := pl.Path
+	oldParams := pl.Parameters
+	mergedParams := cloneParams(oldParams)
+	for k, v := range paramsOverride {
+		mergedParams[k] = v
+	}
+	pl.Path = absPath
+	pl.Parameters = mergedParams
+	jflowObj := pl.VM.Get("jflow")
+	if obj := jflowObj.ToObject(pl.VM); obj != nil {
+		obj.Set("Params", mergedParams)
+	}
+	latheObj := pl.VM.Get("lathe")
+	if obj := latheObj.ToObject(pl.VM); obj != nil {
+		obj.Set("Params", mergedParams)
+	}
+	defer func() {
+		pl.Path = oldPath
+		pl.Parameters = oldParams
+		jflowObj := pl.VM.Get("jflow")
+		if obj := jflowObj.ToObject(pl.VM); obj != nil {
+			obj.Set("Params", oldParams)
+		}
+		latheObj := pl.VM.Get("lathe")
+		if obj := latheObj.ToObject(pl.VM); obj != nil {
+			obj.Set("Params", oldParams)
+		}
+	}()
+
+	result, err := pl.VM.RunScript(absPath, wrapped)
+	if err != nil {
+		logger.Error("Import execution error", "path", absPath, "error", err)
+		return pl.VM.ToValue(map[string]any{})
+	}
+
+	return result
+}
+
+func transformExportStatements(source string) string {
+	declaredNames := []string{}
+
+	source = exportDeclPattern.ReplaceAllStringFunc(source, func(match string) string {
+		parts := exportDeclPattern.FindStringSubmatch(match)
+		if len(parts) == 3 {
+			declaredNames = append(declaredNames, parts[2])
+			return strings.Replace(match, "export ", "", 1)
+		}
+		return match
+	})
+
+	source = exportListPattern.ReplaceAllStringFunc(source, func(match string) string {
+		parts := exportListPattern.FindStringSubmatch(match)
+		if len(parts) != 2 {
+			return match
+		}
+
+		entries := strings.Split(parts[1], ",")
+		assignments := []string{}
+		for _, entry := range entries {
+			item := strings.TrimSpace(entry)
+			if item == "" {
+				continue
+			}
+
+			aliasParts := strings.SplitN(item, " as ", 2)
+			from := strings.TrimSpace(aliasParts[0])
+			to := from
+			if len(aliasParts) == 2 {
+				to = strings.TrimSpace(aliasParts[1])
+			}
+			if from == "" || to == "" {
+				continue
+			}
+			assignments = append(assignments, fmt.Sprintf(`__exports["%s"] = %s;`, to, from))
+		}
+
+		if len(assignments) == 0 {
+			return ""
+		}
+		return strings.Join(assignments, "\n")
+	})
+
+	if len(declaredNames) > 0 {
+		lines := []string{source}
+		for _, name := range declaredNames {
+			lines = append(lines, fmt.Sprintf(`__exports["%s"] = %s;`, name, name))
+		}
+		source = strings.Join(lines, "\n")
+	}
+
+	return source
 }
 
 // Plugin executes an external command and returns its JSON output.

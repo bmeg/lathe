@@ -1,0 +1,9 @@
+# Parameters for examples/bwa_workflow.js
+# Use with: lathe run --dry-run --params-file examples/bwa_params.yaml examples/bwa_workflow.js
+ref_genome: min_ref.fa
+sample1_r1: min_R1.fastq.gz
+sample1_r2: min_R2.fastq.gz
+sample2_r1: min_R1.fastq.gz
+sample2_r2: min_R2.fastq.gz
+cpu_align: 1
+ram_gb: 1

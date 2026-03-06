@@ -47,7 +47,7 @@ executors: [{
 }]
 ```
 
-### Multiple Executors (Sequential)
+### Multiple Executors
 ```javascript
 executors: [
   { image: "python:3.11", command: "prep.py" },
@@ -55,6 +55,8 @@ executors: [
   { image: "python:3.11", command: "report.py" }
 ]
 ```
+
+Note: local execution currently uses the first executor.
 
 ## Inputs
 
@@ -247,20 +249,6 @@ const task = jflow.Process({
     "version": "2.0"
   }
 });
-```
-
-## Legacy Format (Still Supported)
-
-```javascript
-jflow.Process({
-  name: "legacy_task",
-  commandLine: "python script.py input.txt output.txt",
-  image: "python:3.11",
-  inputs: { input: "input.txt" },
-  outputs: { output: "output.txt" },
-  cpus: 4,
-  memoryMB: 8192
-})
 ```
 
 ## Common Patterns

@@ -104,14 +104,15 @@ func (pl *Plan) setupVM() error {
 		// Tool/command templates
 		"Tool": pl.Tool,
 
-		// Loading sub-workflows
-		"LoadPlan": pl.LoadPlan,
+		// Module import
+		"Import": pl.Import,
 
 		// Plugin system for extensibility
 		"Plugin": pl.Plugin,
 
 		// Configuration and parameters
-		"Params": pl.Parameters,
+		"Params":    pl.Parameters,
+		"GetParams": pl.GetParams,
 	}
 
 	vm.Set("jflow", jflowObj)

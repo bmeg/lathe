@@ -81,15 +81,6 @@ This directory contains a suite of test workflows for validating jflow functiona
 
 **Expected Output:** Task with metadata tags
 
-### 08_legacy_format.js
-**Purpose:** Backward compatibility  
-**Features Tested:**
-- Legacy jflow format (commandLine, cpus, memoryMB)
-- Format conversion
-- Mixed format support
-
-**Expected Output:** Legacy format task executes successfully
-
 ### 09_workflow_params.js
 **Purpose:** Parameter passing  
 **Features Tested:**
@@ -115,7 +106,8 @@ This directory contains a suite of test workflows for validating jflow functiona
 **Features Tested:**
 - `jflow.Tool()` returns callable template function
 - Tool template variable substitution (`{{var}}`)
-- `jflow.Path()` file factory usage in tool inputs
+- Typed tool inputs with `{ varName: "File" | "Value" }`
+- `jflow.Path()` file factory usage for `File` inputs
 
 **Expected Output:** Creates `/tmp/tool_template_output.txt` from template-instantiated process
 
