@@ -1,4 +1,4 @@
-package scriptfile
+package jflow
 
 // ============================================================================
 // TES (Task Execution Service) API Aligned Model

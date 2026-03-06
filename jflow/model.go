@@ -1,4 +1,4 @@
-package scriptfile
+package jflow
 
 import (
 	"errors"

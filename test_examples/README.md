@@ -110,6 +110,24 @@ This directory contains a suite of test workflows for validating jflow functiona
 
 **Expected Output:** Three-stage pipeline with final summary
 
+### 11_tool_template_callable.js
+**Purpose:** Callable tool template support  
+**Features Tested:**
+- `jflow.Tool()` returns callable template function
+- Tool template variable substitution (`{{var}}`)
+- `jflow.Path()` file factory usage in tool inputs
+
+**Expected Output:** Creates `/tmp/tool_template_output.txt` from template-instantiated process
+
+### 12_path_object_factories.js
+**Purpose:** Path/Object factory behavior  
+**Features Tested:**
+- `jflow.Path()` local file constructor
+- `jflow.Object()` remote object constructor
+- Tool template rendering with mixed local/remote value types
+
+**Expected Output:** Creates `/tmp/path_object_summary.txt` containing local and remote references
+
 ## Test Design Principles
 
 All tests follow these principles:
@@ -229,8 +247,10 @@ Typical execution times (on standard hardware):
 | 08   | 2-5 seconds   |
 | 09   | 2-5 seconds   |
 | 10   | 5-15 seconds  |
+| 11   | 3-8 seconds   |
+| 12   | 3-8 seconds   |
 
-**Total Suite:** 30-90 seconds
+**Total Suite:** 40-110 seconds
 
 ## Contributing
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
-	"github.com/bmeg/lathe/scriptfile"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +51,7 @@ var List = &cobra.Command{
 		wfName := args[1]
 		//dstBase := args[1]
 		logger.Info("doing list")
-		workflows, err := scriptfile.RunFile(scriptPath)
+		workflows, err := jflow.RunFile(scriptPath)
 		if err != nil {
 			logger.Info("Script Error", "error", err)
 			return err

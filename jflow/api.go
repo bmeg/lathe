@@ -1,4 +1,4 @@
-package scriptfile
+package jflow
 
 import (
 	"encoding/json"
@@ -6,11 +6,15 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/bmeg/lathe/logger"
 	"github.com/dop251/goja"
 	"github.com/google/shlex"
 )
+
+var toolTemplatePattern = regexp.MustCompile(`\{\{\s*([a-zA-Z0-9_]+)\s*\}\}`)
 
 // Process creates a new ProcessDesc (job) from a JavaScript object declaration
 // Uses GA4GH TES-aligned format
@@ -166,7 +170,7 @@ func (pl *Plan) Workflow(name string) *WorkflowDesc {
 
 // Tool creates a reusable tool/command template
 // This is different from Process - it's a template that can be instantiated multiple times
-func (pl *Plan) Tool(data map[string]any) *ToolCommand {
+func (pl *Plan) Tool(data map[string]any) goja.Value {
 	logger.Debug("Creating tool template", "data", data)
 
 	tool := &ToolCommand{
@@ -227,7 +231,195 @@ func (pl *Plan) Tool(data map[string]any) *ToolCommand {
 		}
 	}
 
-	return tool
+	return pl.VM.ToValue(func(call goja.FunctionCall) goja.Value {
+		values := map[string]any{}
+		if len(call.Arguments) > 0 && !goja.IsUndefined(call.Arguments[0]) && !goja.IsNull(call.Arguments[0]) {
+			if err := pl.VM.ExportTo(call.Arguments[0], &values); err != nil {
+				if fallback, ok := call.Arguments[0].Export().(map[string]any); ok {
+					values = fallback
+				}
+			}
+		}
+
+		proc := pl.instantiateTool(tool, values)
+		return pl.VM.ToValue(proc)
+	})
+}
+
+// PathFactory creates a reusable local file constructor that binds a logical file name.
+// Usage: fileCtor = jflow.Path("input"); fileObj = fileCtor("/real/path")
+func (pl *Plan) PathFactory(name string) goja.Value {
+	return pl.VM.ToValue(func(path string) *File {
+		file := &File{
+			Type:     FileTypeLocal,
+			Path:     path,
+			BasePath: filepath.Dir(pl.Path),
+			Metadata: map[string]string{"name": name},
+		}
+		return file
+	})
+}
+
+// Object creates a reusable remote file constructor that binds a logical file name.
+// The URI determines the file type (s3/http/local fallback).
+func (pl *Plan) Object(name string) goja.Value {
+	return pl.VM.ToValue(func(uri string) *File {
+		file := &File{
+			Type:     inferFileType(uri),
+			Path:     uri,
+			BasePath: filepath.Dir(pl.Path),
+			Metadata: map[string]string{"name": name},
+		}
+		return file
+	})
+}
+
+func (pl *Plan) instantiateTool(tool *ToolCommand, values map[string]any) *ProcessDesc {
+	templateValues := make(map[string]string, len(values))
+	for key, value := range values {
+		templateValues[key] = stringifyTemplateValue(value)
+	}
+
+	commandLine := renderToolTemplate(tool.CommandLine, templateValues)
+	commandSpec, err := NewCommandSpec(commandLine)
+	if err != nil {
+		commandSpec, _ = NewCommandSpec("")
+	}
+
+	processName := tool.Name
+	if name, ok := values["name"].(string); ok && name != "" {
+		processName = name
+	}
+
+	resources := tool.Resources
+	if resources.CPUCores == 0 {
+		resources.CPUCores = 1
+	}
+	if resources.RamGB == 0 {
+		resources.RamGB = 1.0
+	}
+	if resources.DiskGB == 0 {
+		resources.DiskGB = 10.0
+	}
+
+	proc := &ProcessDesc{
+		BasePath: filepath.Dir(pl.Path),
+		Name:     processName,
+		Desc:     map[string]any{"tool": tool.Name, "values": values},
+		Executors: []Executor{{
+			Image:   tool.Image,
+			Command: commandSpec.ToArray(tool.Shell),
+		}},
+		Resources:    &resources,
+		Dependencies: []string{},
+		Status: &JobStatus{
+			State: JobStateQueued,
+		},
+		future: NewFuture[*JobResult](),
+	}
+
+	proc.Inputs = buildToolInputs(tool, values)
+	proc.Outputs = buildToolOutputs(tool, values, templateValues)
+
+	return proc
+}
+
+func buildToolInputs(tool *ToolCommand, values map[string]any) []Input {
+	inputs := []Input{}
+
+	if len(tool.Inputs) > 0 {
+		for key := range tool.Inputs {
+			if value, ok := values[key]; ok {
+				if input, ok := valueToInput(key, value); ok {
+					inputs = append(inputs, input)
+				}
+			}
+		}
+		return inputs
+	}
+
+	for key, value := range values {
+		if input, ok := valueToInput(key, value); ok {
+			inputs = append(inputs, input)
+		}
+	}
+
+	return inputs
+}
+
+func buildToolOutputs(tool *ToolCommand, values map[string]any, templateValues map[string]string) []Output {
+	outputs := []Output{}
+	for key, spec := range tool.Outputs {
+		path := ""
+		if value, ok := values[key]; ok {
+			path = stringifyTemplateValue(value)
+		}
+		if path == "" {
+			path = renderToolTemplate(spec, templateValues)
+		}
+		if path == "" {
+			continue
+		}
+		outputs = append(outputs, Output{Name: key, Path: path})
+	}
+	return outputs
+}
+
+func valueToInput(name string, value any) (Input, bool) {
+	if file := fileFromValue(value); file != nil {
+		return Input{Name: name, Path: file.Path}, true
+	}
+	return Input{}, false
+}
+
+func fileFromValue(value any) *File {
+	if file, ok := value.(*File); ok && file != nil {
+		return file
+	}
+	if m, ok := value.(map[string]any); ok {
+		path, ok := m["path"].(string)
+		if !ok || path == "" {
+			return nil
+		}
+		fileType := inferFileType(path)
+		if t, ok := m["type"].(string); ok && t != "" {
+			fileType = FileType(strings.ToLower(t))
+		}
+		return &File{Type: fileType, Path: path}
+	}
+	return nil
+}
+
+func stringifyTemplateValue(value any) string {
+	if file := fileFromValue(value); file != nil {
+		return file.Path
+	}
+	return fmt.Sprint(value)
+}
+
+func renderToolTemplate(template string, values map[string]string) string {
+	return toolTemplatePattern.ReplaceAllStringFunc(template, func(match string) string {
+		tokens := toolTemplatePattern.FindStringSubmatch(match)
+		if len(tokens) != 2 {
+			return match
+		}
+		if replacement, ok := values[tokens[1]]; ok {
+			return replacement
+		}
+		return ""
+	})
+}
+
+func inferFileType(path string) FileType {
+	lower := strings.ToLower(path)
+	switch {
+	case strings.HasPrefix(lower, "s3://"):
+		return FileTypeS3
+	case strings.HasPrefix(lower, "http://"), strings.HasPrefix(lower, "https://"):
+		return FileTypeHTTP
+	default:
+		return FileTypeLocal
+	}
 }
 
 // DockerImage creates a new Docker image specification

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/bmeg/flame"
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
-	"github.com/bmeg/lathe/scriptfile"
 )
 
 type WorkflowStep interface {
@@ -25,11 +25,11 @@ type WorkflowStep interface {
 
 type WorkflowProcess struct {
 	BaseDir  string
-	Desc     *scriptfile.ProcessDesc
+	Desc     *jflow.ProcessDesc
 	Workflow *Workflow
 }
 
-func NewWorkflowProcess(wf *Workflow, baseDir string, desc *scriptfile.ProcessDesc) *WorkflowProcess {
+func NewWorkflowProcess(wf *Workflow, baseDir string, desc *jflow.ProcessDesc) *WorkflowProcess {
 	return &WorkflowProcess{BaseDir: baseDir, Desc: desc, Workflow: wf}
 }
 

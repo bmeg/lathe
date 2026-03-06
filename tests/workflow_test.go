@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
-	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/lathe/workflow"
 )
 
@@ -85,6 +85,18 @@ func GetTestWorkflows() []TestWorkflow {
 			Description: "Complex multi-step pipeline",
 			Timeout:     90 * time.Second,
 		},
+		{
+			Name:        "tool_template_callable",
+			FilePath:    filepath.Join(testDir, "11_tool_template_callable.js"),
+			Description: "Callable jflow.Tool template with Path factory",
+			Timeout:     45 * time.Second,
+		},
+		{
+			Name:        "path_object_factories",
+			FilePath:    filepath.Join(testDir, "12_path_object_factories.js"),
+			Description: "Path/Object constructors used in tool instantiation",
+			Timeout:     45 * time.Second,
+		},
 	}
 
 	return tests
@@ -100,7 +112,7 @@ func runWorkflow(t *testing.T, testWf TestWorkflow) error {
 		return fmt.Errorf("test file not found: %s", testWf.FilePath)
 	}
 
-	workflows, err := scriptfile.RunFile(testWf.FilePath)
+	workflows, err := jflow.RunFile(testWf.FilePath)
 	if err != nil {
 		return fmt.Errorf("failed to parse workflow: %w", err)
 	}
@@ -110,7 +122,7 @@ func runWorkflow(t *testing.T, testWf TestWorkflow) error {
 	}
 
 	var workflowName string
-	var wfd *scriptfile.WorkflowDesc
+	var wfd *jflow.WorkflowDesc
 	for name, desc := range workflows.Workflows {
 		workflowName = name
 		wfd = desc
@@ -204,7 +216,7 @@ func TestWorkflowValidation(t *testing.T) {
 				return
 			}
 
-			workflows, err := scriptfile.RunFile(testWf.FilePath)
+			workflows, err := jflow.RunFile(testWf.FilePath)
 			if err != nil {
 				t.Errorf("Failed to parse workflow: %v", err)
 				return

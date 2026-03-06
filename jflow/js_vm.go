@@ -1,4 +1,4 @@
-package scriptfile
+package jflow
 
 import (
 	"fmt"
@@ -95,6 +95,8 @@ func (pl *Plan) setupVM() error {
 		// File declaration and checking
 		"File":      pl.File,
 		"FileCheck": pl.FileCheck,
+		"Path":      pl.PathFactory,
+		"Object":    pl.Object,
 
 		// Docker image declaration
 		"DockerImage": pl.DockerImage,

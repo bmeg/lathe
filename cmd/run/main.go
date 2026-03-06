@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bmeg/lathe/jflow"
 	"github.com/bmeg/lathe/logger"
 	"github.com/bmeg/lathe/runner"
-	"github.com/bmeg/lathe/scriptfile"
 	"github.com/bmeg/lathe/workflow"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 		if len(args) > 1 {
 			names = args[1:]
 		}
-		workflows, err := scriptfile.RunFile(scriptPath)
+		workflows, err := jflow.RunFile(scriptPath)
 		if err != nil {
 			logger.Error("Script Error %s : %s\n", scriptPath, err)
 			return err
