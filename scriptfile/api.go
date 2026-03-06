@@ -13,68 +13,20 @@ import (
 )
 
 // Process creates a new ProcessDesc (job) from a JavaScript object declaration
-// The object should contain: name, commandLine, shell (optional), inputs, outputs, image, cpus, memoryMB
+// Uses GA4GH TES-aligned format
+// The object should contain:
+//
+//	name, executors, inputs (array), outputs (array), resources, volumes, tags
 func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 	logger.Debug("Creating process from declaration", "data", data)
 
 	proc := &ProcessDesc{
 		BasePath:     filepath.Dir(pl.Path),
 		Desc:         data,
-		Inputs:       make(map[string]string),
-		Outputs:      make(map[string]string),
 		Dependencies: []string{},
 		Status: &JobStatus{
-			State: JobStatePending,
+			State: JobStateQueued,
 		},
-	}
-
-	// Parse command line
-	if cmd, ok := data["commandLine"].(string); ok {
-		proc.CommandLine = cmd
-	}
-
-	// Parse shell interpreter
-	if shell, ok := data["shell"].(string); ok {
-		proc.Shell = shell
-	}
-
-	// Parse inputs map
-	if inputs, ok := data["inputs"].(map[string]any); ok {
-		for key, val := range inputs {
-			if valStr, ok := val.(string); ok {
-				proc.Inputs[key] = valStr
-			}
-		}
-	}
-
-	// Parse outputs map
-	if outputs, ok := data["outputs"].(map[string]any); ok {
-		for key, val := range outputs {
-			if valStr, ok := val.(string); ok {
-				proc.Outputs[key] = valStr
-			}
-		}
-	}
-
-	// Parse Docker image
-	if image, ok := data["image"].(string); ok {
-		proc.Image = image
-	}
-
-	// Parse resource requirements - memory
-	proc.MemMB = 1024 // default
-	if memMb, ok := data["memoryMB"].(float64); ok {
-		proc.MemMB = uint(memMb)
-	} else if memMb, ok := data["memMB"].(float64); ok {
-		proc.MemMB = uint(memMb)
-	}
-
-	// Parse resource requirements - CPUs
-	proc.NCpus = 1 // default
-	if cpus, ok := data["cpus"].(float64); ok {
-		proc.NCpus = uint(cpus)
-	} else if cpus, ok := data["ncpus"].(float64); ok {
-		proc.NCpus = uint(cpus)
 	}
 
 	// Parse process name
@@ -87,10 +39,69 @@ func (pl *Plan) Process(data map[string]any) *ProcessDesc {
 		proc.Description = desc
 	}
 
+	// Parse executors (array format)
+	if executors, ok := data["executors"].([]any); ok {
+		proc.Executors = make([]Executor, 0, len(executors))
+		for _, execAny := range executors {
+			if execMap, ok := execAny.(map[string]any); ok {
+				executor := parseExecutor(execMap)
+				proc.Executors = append(proc.Executors, executor)
+			}
+		}
+	}
+
+	// Parse inputs (array format)
+	if inputs, ok := data["inputs"].([]any); ok {
+		proc.Inputs = make([]Input, 0, len(inputs))
+		for _, inputAny := range inputs {
+			if inputMap, ok := inputAny.(map[string]any); ok {
+				input := parseInput(inputMap)
+				proc.Inputs = append(proc.Inputs, input)
+			}
+		}
+	}
+
+	// Parse outputs (array format)
+	if outputs, ok := data["outputs"].([]any); ok {
+		proc.Outputs = make([]Output, 0, len(outputs))
+		for _, outputAny := range outputs {
+			if outputMap, ok := outputAny.(map[string]any); ok {
+				output := parseOutput(outputMap)
+				proc.Outputs = append(proc.Outputs, output)
+			}
+		}
+	}
+
+	// Parse resources
+	if resources, ok := data["resources"].(map[string]any); ok {
+		proc.Resources = parseResources(resources)
+	}
+
+	// Parse volumes
+	if volumes, ok := data["volumes"].([]any); ok {
+		proc.Volumes = make([]string, 0, len(volumes))
+		for _, vol := range volumes {
+			if volStr, ok := vol.(string); ok {
+				proc.Volumes = append(proc.Volumes, volStr)
+			}
+		}
+	}
+
+	// Parse tags
+	if tags, ok := data["tags"].(map[string]any); ok {
+		proc.Tags = make(map[string]string)
+		for k, v := range tags {
+			if vStr, ok := v.(string); ok {
+				proc.Tags[k] = vStr
+			}
+		}
+	}
+
+	// Initialize future for deferred results
 	// Initialize future for deferred results
 	proc.future = NewFuture[*JobResult]()
 
-	logger.Info("Process created", "name", proc.Name, "command", proc.CommandLine)
+	logger.Info("Process created", "name", proc.Name, "executors", len(proc.Executors))
 	return proc
 }
 
@@ -199,14 +210,14 @@ func (pl *Plan) Tool(data map[string]any) *ToolCommand {
 
 	// Parse resources
 	if resources, ok := data["resources"].(map[string]any); ok {
-		if cpus, ok := resources["cpus"].(float64); ok {
-			tool.Resources.CPUs = uint(cpus)
+		if cpuCores, ok := resources["cpu_cores"].(float64); ok {
+			tool.Resources.CPUCores = uint(cpuCores)
 		}
-		if mem, ok := resources["memoryMB"].(float64); ok {
-			tool.Resources.MemoryMB = uint(mem)
+		if ramGb, ok := resources["ram_gb"].(float64); ok {
+			tool.Resources.RamGB = ramGb
 		}
-		if disk, ok := resources["diskMB"].(float64); ok {
-			tool.Resources.DiskMB = uint(disk)
+		if diskGb, ok := resources["disk_gb"].(float64); ok {
+			tool.Resources.DiskGB = diskGb
 		}
 		if timeout, ok := resources["timeout"].(float64); ok {
 			tool.Resources.Timeout = uint(timeout)
@@ -264,6 +275,172 @@ func (pl *Plan) Print(x any) {
 // Println logs a message with newline at info level
 func (pl *Plan) Println(x any) {
 	logger.Info(fmt.Sprintf("%v\n", x))
+}
+
+// ============================================================================
+// Format Parsing Helpers
+// ============================================================================
+
+// parseExecutor parses an executor from a map
+func parseExecutor(data map[string]any) Executor {
+	executor := Executor{
+		Env: make(map[string]string),
+	}
+
+	if image, ok := data["image"].(string); ok {
+		executor.Image = image
+	}
+
+	// Parse command - support both string and array
+	if cmd, ok := data["command"]; ok {
+		switch v := cmd.(type) {
+		case string:
+			// String command - wrap in shell
+			executor.Command = []string{"/bin/sh", "-c", v}
+		case []any:
+			executor.Command = make([]string, 0, len(v))
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					executor.Command = append(executor.Command, s)
+				}
+			}
+		case []string:
+			executor.Command = v
+		}
+	}
+
+	if workdir, ok := data["workdir"].(string); ok {
+		executor.Workdir = workdir
+	}
+	if stdin, ok := data["stdin"].(string); ok {
+		executor.Stdin = stdin
+	}
+	if stdout, ok := data["stdout"].(string); ok {
+		executor.Stdout = stdout
+	}
+	if stderr, ok := data["stderr"].(string); ok {
+		executor.Stderr = stderr
+	}
+	if ignoreErr, ok := data["ignore_error"].(bool); ok {
+		executor.IgnoreError = ignoreErr
+	}
+
+	// Parse environment variables
+	if env, ok := data["env"].(map[string]any); ok {
+		for k, v := range env {
+			if vStr, ok := v.(string); ok {
+				executor.Env[k] = vStr
+			}
+		}
+	}
+
+	return executor
+}
+
+// parseInput parses an input from a map
+func parseInput(data map[string]any) Input {
+	input := Input{}
+
+	if name, ok := data["name"].(string); ok {
+		input.Name = name
+	}
+	if desc, ok := data["description"].(string); ok {
+		input.Description = desc
+	}
+	if url, ok := data["url"].(string); ok {
+		input.URL = url
+	}
+	if path, ok := data["path"].(string); ok {
+		input.Path = path
+	}
+	if content, ok := data["content"].(string); ok {
+		input.Content = content
+	}
+	if fileType, ok := data["type"].(string); ok {
+		input.Type = FileTypeEnum(fileType)
+	}
+
+	return input
+}
+
+// parseOutput parses an output from a map
+func parseOutput(data map[string]any) Output {
+	output := Output{}
+
+	if name, ok := data["name"].(string); ok {
+		output.Name = name
+	}
+	if desc, ok := data["description"].(string); ok {
+		output.Description = desc
+	}
+	if url, ok := data["url"].(string); ok {
+		output.URL = url
+	}
+	if path, ok := data["path"].(string); ok {
+		output.Path = path
+	}
+	if pathPrefix, ok := data["path_prefix"].(string); ok {
+		output.PathPrefix = pathPrefix
+	}
+	if fileType, ok := data["type"].(string); ok {
+		output.Type = FileTypeEnum(fileType)
+	}
+
+	return output
+}
+
+// parseResources parses resources from a map
+func parseResources(data map[string]any) *ResourceRequirements {
+	res := &ResourceRequirements{}
+
+	if cpuCores, ok := data["cpu_cores"].(float64); ok {
+		res.CPUCores = uint(cpuCores)
+	}
+	if ramGb, ok := data["ram_gb"].(float64); ok {
+		res.RamGB = ramGb
+	}
+	if diskGb, ok := data["disk_gb"].(float64); ok {
+		res.DiskGB = diskGb
+	}
+	if preemptible, ok := data["preemptible"].(bool); ok {
+		res.Preemptible = preemptible
+	}
+
+	// Parse zones
+	if zones, ok := data["zones"].([]any); ok {
+		res.Zones = make([]string, 0, len(zones))
+		for _, z := range zones {
+			if zStr, ok := z.(string); ok {
+				res.Zones = append(res.Zones, zStr)
+			}
+		}
+	} else if zone, ok := data["zones"].(string); ok {
+		// Support single zone as string
+		res.Zones = []string{zone}
+	}
+
+	// Parse backend parameters
+	if backendParams, ok := data["backend_parameters"].(map[string]any); ok {
+		res.BackendParameters = make(map[string]string)
+		for k, v := range backendParams {
+			if vStr, ok := v.(string); ok {
+				res.BackendParameters[k] = vStr
+			}
+		}
+	}
+
+	if backendStrict, ok := data["backend_parameters_strict"].(bool); ok {
+		res.BackendParametersStrict = backendStrict
+	}
+
+	if timeout, ok := data["timeout"].(float64); ok {
+		res.Timeout = uint(timeout)
+	}
+	if retries, ok := data["retries"].(float64); ok {
+		res.Retries = uint(retries)
+	}
+
+	return res
 }
 
 // Glob expands a glob pattern relative to the script directory

@@ -79,12 +79,13 @@ func RunFileWithParams(path string, params map[string]any) (*Plan, error) {
 	return plan, nil
 }
 
-// setupVM initializes the JavaScript VM with the Lathe API
+// setupVM initializes the JavaScript VM with the jflow API (open standard)
 func (pl *Plan) setupVM() error {
 	vm := pl.VM
 
-	// Set up the main Lathe API object
-	latheObj := map[string]any{
+	// Set up the jflow API object (open standard for workflow definitions)
+	// Note: "lathe" is kept for backward compatibility
+	jflowObj := map[string]any{
 		// Workflow declaration
 		"Workflow": pl.Workflow,
 
@@ -111,7 +112,9 @@ func (pl *Plan) setupVM() error {
 		"Params": pl.Parameters,
 	}
 
-	vm.Set("lathe", latheObj)
+	vm.Set("jflow", jflowObj)
+	// Maintain backward compatibility with "lathe" namespace
+	vm.Set("lathe", jflowObj)
 
 	// Global utility functions
 	vm.Set("print", pl.Print)

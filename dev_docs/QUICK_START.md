@@ -1,15 +1,15 @@
 # Lathe Workflow Engine - Quick Start Examples
 
-This file contains practical examples to get started with the refactored Lathe workflow engine.
+This file contains practical examples to get started with Lathe using the **jflow** workflow API standard.
 
 ## Example 1: Hello World
 
 **File: hello.js**
 
 ```javascript
-const wf = lathe.Workflow("hello");
+const wf = jflow.Workflow("hello");
 
-const sayHello = lathe.Process({
+const sayHello = jflow.Process({
   name: "greet",
   commandLine: "echo 'Hello, World!' > greeting.txt",
   outputs: { greeting: "greeting.txt" },
@@ -30,15 +30,15 @@ lathe run hello.js
 **File: pipeline.js**
 
 ```javascript
-const wf = lathe.Workflow("pipeline");
+const wf = jflow.Workflow("pipeline");
 
 // Ensure input exists
-wf.Add(lathe.FileCheck({
+wf.Add(jflow.FileCheck({
   file: { path: "data/input.csv" }
 }));
 
 // Step 1: Clean data
-const cleanJob = lathe.Process({
+const cleanJob = jflow.Process({
   name: "clean_data",
   commandLine: "python clean.py data/input.csv > data/cleaned.csv",
   image: "python:3.11",
@@ -50,7 +50,7 @@ const cleanJob = lathe.Process({
 wf.Add(cleanJob);
 
 // Step 2: Validate cleaned data
-const validateJob = lathe.Process({
+const validateJob = jflow.Process({
   name: "validate",
   commandLine: "python validate.py data/cleaned.csv > data/report.txt",
   image: "python:3.11",
@@ -72,9 +72,9 @@ lathe run pipeline.js
 **File: with_callbacks.js**
 
 ```javascript
-const wf = lathe.Workflow("analysis");
+const wf = jflow.Workflow("analysis");
 
-const job = lathe.Process({
+const job = jflow.Process({
   name: "compute_stats",
   commandLine: "python stats.py > output.json",
   image: "python:3.11",
@@ -85,29 +85,29 @@ const job = lathe.Process({
 
 // Callback for post-job validation
 onComplete(job, function(result) {
-  lathe.println("=== Job Completed ===");
-  lathe.println("Name: " + result.jobName);
-  lathe.println("Status: " + result.status.state);
+  println("=== Job Completed ===");
+  println("Name: " + result.jobName);
+  println("Status: " + result.status.state);
   
   if (result.status.state === "completed") {
-    lathe.println("Exit Code: " + result.status.exitCode);
+    println("Exit Code: " + result.status.exitCode);
     
     if (result.status.exitCode === 0) {
-      lathe.println("✓ SUCCESS");
+      println("✓ SUCCESS");
     } else {
-      lathe.println("✗ FAILED");
+      println("✗ FAILED");
       if (result.status.error) {
-        lathe.println("Error: " + result.status.error);
+        println("Error: " + result.status.error);
       }
     }
   } else {
-    lathe.println("✗ " + result.status.error);
+    println("✗ " + result.status.error);
   }
   
   // Log execution time
   if (result.status.startTime && result.status.endTime) {
     const duration = result.status.endTime - result.status.startTime;
-    lathe.println("Duration: " + duration + "ms");
+    println("Duration: " + duration + "ms");
   }
 });
 
@@ -125,16 +125,16 @@ lathe run with_callbacks.js
 
 ```javascript
 // Get parameters from command line or use defaults
-const sampleId = lathe.Params.sample || "default";
-const threads = lathe.Params.threads || 4;
-const memory = lathe.Params.memory || 2048;
+const sampleId = jflow.Params.sample || "default";
+const threads = jflow.Params.threads || 4;
+const memory = jflow.Params.memory || 2048;
 
-lathe.println("Running analysis for sample: " + sampleId);
-lathe.println("Using " + threads + " threads");
+println("Running analysis for sample: " + sampleId);
+println("Using " + threads + " threads");
 
-const wf = lathe.Workflow("analysis");
+const wf = jflow.Workflow("analysis");
 
-const alignJob = lathe.Process({
+const alignJob = jflow.Process({
   name: "align_" + sampleId,
   commandLine: `bwa mem -t ${threads} ref.fa ${sampleId}.fq > ${sampleId}.sam`,
   image: "bwa:latest",
@@ -155,10 +155,10 @@ lathe run parameterized.js --params sample=sample1 --params threads=8 --params m
 **File: multi_stage.js**
 
 ```javascript
-const wf = lathe.Workflow("genomics");
+const wf = jflow.Workflow("genomics");
 
 // Stage 1: Index reference genome
-const indexJob = lathe.Process({
+const indexJob = jflow.Process({
   name: "index_genome",
   commandLine: "bwa index reference.fa",
   image: "bwa:latest",
@@ -169,17 +169,17 @@ const indexJob = lathe.Process({
 
 onComplete(indexJob, function(result) {
   if (result.status.exitCode !== 0) {
-    lathe.println("ERROR: Genome indexing failed!");
-    lathe.println(result.status.error);
+    println("ERROR: Genome indexing failed!");
+    println(result.status.error);
   } else {
-    lathe.println("✓ Genome indexed successfully");
+    println("✓ Genome indexed successfully");
   }
 });
 
 wf.Add(indexJob);
 
 // Stage 2: Align reads
-const alignJob = lathe.Process({
+const alignJob = jflow.Process({
   name: "align_reads",
   commandLine: "bwa mem reference.fa reads.fq > output.sam",
   image: "bwa:latest",
@@ -194,16 +194,16 @@ const alignJob = lathe.Process({
 
 onComplete(alignJob, function(result) {
   if (result.status.exitCode === 0) {
-    lathe.println("✓ Read alignment completed");
+    println("✓ Read alignment completed");
   } else {
-    lathe.println("✗ Read alignment failed");
+    println("✗ Read alignment failed");
   }
 });
 
 wf.Add(alignJob);
 
 // Stage 3: Convert to BAM (depends on alignment output)
-const convertJob = lathe.Process({
+const convertJob = jflow.Process({
   name: "convert_bam",
   commandLine: "samtools view -b -o output.bam output.sam",
   image: "samtools:latest",
@@ -215,8 +215,8 @@ const convertJob = lathe.Process({
 
 onComplete(convertJob, function(result) {
   if (result.status.exitCode === 0) {
-    lathe.println("✓ BAM conversion completed");
-    lathe.println("Output: output.bam");
+    println("✓ BAM conversion completed");
+    println("Output: output.bam");
   }
 });
 
@@ -234,11 +234,11 @@ lathe run multi_stage.js
 
 ```javascript
 // Load sub-workflows from other files
-const prepWfs = lathe.LoadPlan("preprocessing.js");
-const analysisWfs = lathe.LoadPlan("analysis.js");
+const prepWfs = jflow.LoadPlan("preprocessing.js");
+const analysisWfs = jflow.LoadPlan("analysis.js");
 
 // Create main workflow
-const mainWf = lathe.Workflow("main");
+const mainWf = jflow.Workflow("main");
 
 // Add sub-workflows
 mainWf.Add(prepWfs.preprocess);
@@ -248,9 +248,9 @@ mainWf.Add(analysisWfs.analyze);
 **File: preprocessing.js**
 
 ```javascript
-const prepWf = lathe.Workflow("preprocess");
+const prepWf = jflow.Workflow("preprocess");
 
-const cleanJob = lathe.Process({
+const cleanJob = jflow.Process({
   name: "clean_data",
   commandLine: "python clean.py input.raw > input.clean",
   image: "python:3.11",
@@ -263,9 +263,9 @@ prepWf.Add(cleanJob);
 **File: analysis.js**
 
 ```javascript
-const analysisWf = lathe.Workflow("analyze");
+const analysisWf = jflow.Workflow("analyze");
 
-const analyzeJob = lathe.Process({
+const analyzeJob = jflow.Process({
   name: "analyze",
   commandLine: "python analyze.py input.clean > results.txt",
   image: "python:3.11",
@@ -287,15 +287,15 @@ lathe run main_workflow.js
 
 ```javascript
 // Build custom Docker image
-lathe.DockerImage("docker/myapp", "myapp:latest", "Dockerfile", {
+jflow.DockerImage("docker/myapp", "myapp:latest", "Dockerfile", {
   VERSION: "1.0.0",
   PREFIX: "/app"
 });
 
-const wf = lathe.Workflow("containerized");
+const wf = jflow.Workflow("containerized");
 
 // Use the custom image
-const appJob = lathe.Process({
+const appJob = jflow.Process({
   name: "run_app",
   commandLine: "/app/bin/myapp --input data.txt > results.json",
   image: "myapp:latest",
@@ -320,15 +320,15 @@ lathe run dockerized.js
 
 ```javascript
 // Load configuration from external tool
-const config = lathe.Plugin("get_samples --json");
+const config = jflow.Plugin("get_samples --json");
 
-lathe.println("Loaded " + config.samples.length + " samples");
+println("Loaded " + config.samples.length + " samples");
 
-const wf = lathe.Workflow("dynamic_analysis");
+const wf = jflow.Workflow("dynamic_analysis");
 
 // Create a job for each sample
 for (const sample of config.samples) {
-  const job = lathe.Process({
+  const job = jflow.Process({
     name: "analyze_" + sample.name,
     commandLine: `analyze.sh ${sample.id} > results_${sample.name}.txt`,
     image: sample.image || "analysis:latest",
@@ -340,7 +340,7 @@ for (const sample of config.samples) {
   });
   
   onComplete(job, function(result) {
-    lathe.println("Analyzed sample: " + sample.name);
+    println("Analyzed sample: " + sample.name);
   });
   
   wf.Add(job);
@@ -357,9 +357,9 @@ lathe run dynamic.js
 **File: resource_heavy.js**
 
 ```javascript
-const wf = lathe.Workflow("big_data");
+const wf = jflow.Workflow("big_data");
 
-const job = lathe.Process({
+const job = jflow.Process({
   name: "big_compute",
   commandLine: "bigcompute --input huge_data.bin --output result.bin",
   image: "scientific:latest",
@@ -398,9 +398,9 @@ lathe run --runner tes --tes-url http://tes-server:8000 resource_heavy.js
 **File: with_retries.js**
 
 ```javascript
-const wf = lathe.Workflow("reliable");
+const wf = jflow.Workflow("reliable");
 
-const unreliableJob = lathe.Process({
+const unreliableJob = jflow.Process({
   name: "download_data",
   commandLine: "wget https://example.com/data.zip -O data.zip",
   outputs: { data: "data.zip" },
@@ -411,17 +411,17 @@ const unreliableJob = lathe.Process({
 
 onComplete(unreliableJob, function(result) {
   if (result.status.exitCode === 0) {
-    lathe.println("✓ Download successful");
+    println("✓ Download successful");
   } else {
-    lathe.println("✗ Download failed");
-    lathe.println("The runner will retry this job");
+    println("✗ Download failed");
+    println("The runner will retry this job");
   }
 });
 
 wf.Add(unreliableJob);
 
 // Next job depends on successful download
-const processJob = lathe.Process({
+const processJob = jflow.Process({
   name: "process",
   commandLine: "unzip data.zip && process.sh > results.txt",
   inputs: { archive: "data.zip" },

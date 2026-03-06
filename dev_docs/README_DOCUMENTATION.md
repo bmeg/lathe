@@ -183,7 +183,7 @@ Different backends for executing workflows:
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 4
 2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) Parameter section
-3. Use: `lathe.Params.paramName`
+3. Use: `jflow.Params.paramName`
 
 ### Use Docker containers
 
@@ -195,7 +195,7 @@ Different backends for executing workflows:
 
 1. Read: [QUICK_START.md](QUICK_START.md) Example 6
 2. Reference: [WORKFLOW_MODEL.md](WORKFLOW_MODEL.md) LoadPlan section
-3. Use: `lathe.LoadPlan("sub.js")`
+3. Use: `jflow.LoadPlan("sub.js")`
 
 ### Deploy to cloud
 
@@ -209,16 +209,16 @@ Different backends for executing workflows:
 ### Global Functions
 
 ```javascript
-lathe.Workflow(name)           // Create workflow
-lathe.Process(spec)            // Create job
-lathe.File(spec)               // Reference file
-lathe.FileCheck(spec)          // File existence check
-lathe.Tool(spec)               // Tool template
-lathe.DockerImage(...)         // Docker image
-lathe.LoadPlan(path)           // Load sub-workflow
-lathe.Plugin(cmd)              // Execute external command
+jflow.Workflow(name)           // Create workflow
+jflow.Process(spec)            // Create job
+jflow.File(spec)               // Reference file
+jflow.FileCheck(spec)          // File existence check
+jflow.Tool(spec)               // Tool template
+jflow.DockerImage(...)         // Docker image
+jflow.LoadPlan(path)           // Load sub-workflow
+jflow.Plugin(cmd)              // Execute external command
 onComplete(job, callback)      // Register callback
-lathe.Params                   // User parameters
+jflow.Params                   // User parameters
 print(x), println(x)           // Logging
 glob(pattern)                  // Path globbing
 ```
@@ -286,7 +286,7 @@ onComplete(job, function(result) {
 ### Problem: Parameters not passed to workflow
 
 **Check**:
-1. Use `lathe.Params.paramName` (not capital P in object)
+1. Use `jflow.Params.paramName` (not capital P in object)
 2. Pass parameters: `--params key=value`
 3. See [QUICK_START.md](QUICK_START.md) Example 4
 

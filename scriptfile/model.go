@@ -1,8 +1,14 @@
 package scriptfile
 
 import (
+	"errors"
 	"sync"
 	"time"
+)
+
+// Error types
+var (
+	ErrInvalidCommandType = errors.New("command must be string or []string")
 )
 
 // ============================================================================
@@ -61,36 +67,59 @@ type FileCheck struct {
 // Resource Requirements
 // ============================================================================
 
-// ResourceRequirements specifies compute resources needed for a job
+// ResourceRequirements specifies compute resources needed for a job.
+// Aligned with GA4GH TES API specification.
 type ResourceRequirements struct {
-	// CPUs: number of CPU cores requested
-	CPUs uint `json:"cpus,omitempty"`
+	// CPUCores: number of CPU cores requested
+	CPUCores uint `json:"cpu_cores,omitempty"`
 
-	// MemoryMB: memory in megabytes
-	MemoryMB uint `json:"memoryMB,omitempty"`
+	// RamGB: memory in gigabytes
+	RamGB float64 `json:"ram_gb,omitempty"`
 
-	// DiskMB: disk space in megabytes
-	DiskMB uint `json:"diskMB,omitempty"`
+	// DiskGB: disk space in gigabytes
+	DiskGB float64 `json:"disk_gb,omitempty"`
 
-	// GPUs: number of GPUs requested
-	GPUs uint `json:"gpus,omitempty"`
+	// Preemptible: allow running on preemptible/spot instances
+	Preemptible bool `json:"preemptible,omitempty"`
 
-	// Timeout: maximum execution time in seconds
+	// Zones: compute zones where the task should run
+	Zones []string `json:"zones,omitempty"`
+
+	// BackendParameters: key/value pairs for backend configuration
+	BackendParameters map[string]string `json:"backend_parameters,omitempty"`
+
+	// BackendParametersStrict: fail if backend parameters are unsupported
+	BackendParametersStrict bool `json:"backend_parameters_strict,omitempty"`
+
+	// Timeout: maximum execution time in seconds (jflow-specific)
 	Timeout uint `json:"timeout,omitempty"`
 
-	// Retries: number of times to retry failed execution
+	// Retries: number of times to retry failed execution (jflow-specific)
 	Retries uint `json:"retries,omitempty"`
 }
 
 // Default resource requirements if not specified
 func DefaultResourceRequirements() ResourceRequirements {
 	return ResourceRequirements{
-		CPUs:     1,
-		MemoryMB: 1024,
-		DiskMB:   0,
-		GPUs:     0,
-		Timeout:  0, // no timeout
-		Retries:  0,
+		CPUCores:    1,
+		RamGB:       1.0,
+		DiskGB:      10.0,
+		Preemptible: false,
+		Timeout:     0, // no timeout
+		Retries:     0,
+	}
+}
+
+// ToResources converts to native resource format
+func (r *ResourceRequirements) ToResources() *Resources {
+	return &Resources{
+		CPUCores:                r.CPUCores,
+		RamGB:                   r.RamGB,
+		DiskGB:                  r.DiskGB,
+		Preemptible:             r.Preemptible,
+		Zones:                   r.Zones,
+		BackendParameters:       r.BackendParameters,
+		BackendParametersStrict: r.BackendParametersStrict,
 	}
 }
 
@@ -155,15 +184,28 @@ type ToolCommand struct {
 // ============================================================================
 
 // JobState represents the state of a job execution
+// Uses TES-aligned state names
 type JobState string
 
 const (
-	JobStatePending   JobState = "pending"
-	JobStateRunning   JobState = "running"
-	JobStateCompleted JobState = "completed"
-	JobStateFailed    JobState = "failed"
-	JobStateCancelled JobState = "cancelled"
+	// TES-aligned states
+	JobStateUnknown       JobState = "UNKNOWN"
+	JobStateQueued        JobState = "QUEUED"
+	JobStateInitializing  JobState = "INITIALIZING"
+	JobStateRunning       JobState = "RUNNING"
+	JobStatePaused        JobState = "PAUSED"
+	JobStateComplete      JobState = "COMPLETE"
+	JobStateExecutorError JobState = "EXECUTOR_ERROR"
+	JobStateSystemError   JobState = "SYSTEM_ERROR"
+	JobStateCanceled      JobState = "CANCELED"
+	JobStateCanceling     JobState = "CANCELING"
+	JobStatePreempted     JobState = "PREEMPTED"
 )
+
+// ToState converts JobState to State
+func (js JobState) ToState() State {
+	return State(js)
+}
 
 // JobStatus represents the execution status of a job
 type JobStatus struct {
@@ -175,7 +217,8 @@ type JobStatus struct {
 	Metadata  map[string]any `json:"metadata,omitempty"`
 }
 
-// ProcessDesc represents a job declaration in the workflow
+// ProcessDesc represents a job declaration in the workflow.
+// Uses GA4GH TES-aligned format.
 type ProcessDesc struct {
 	// BasePath is the working directory for this process
 	BasePath string `json:"-"`
@@ -189,24 +232,25 @@ type ProcessDesc struct {
 	// The raw declaration data (for extensibility)
 	Desc map[string]any `json:"-"`
 
-	// Command-line to execute
-	CommandLine string `json:"commandLine"`
+	// Inputs are input files (TES format)
+	Inputs []Input `json:"inputs,omitempty"`
 
-	// Shell interpreter (sh, bash, etc)
-	Shell string `json:"shell,omitempty"`
+	// Outputs are output files (TES format)
+	Outputs []Output `json:"outputs,omitempty"`
 
-	// Input file mappings
-	Inputs map[string]string `json:"inputs"`
+	// Executors are commands to run sequentially (TES format)
+	Executors []Executor `json:"executors,omitempty"`
 
-	// Output file mappings
-	Outputs map[string]string `json:"outputs"`
+	// Volumes are shared directories between executors
+	Volumes []string `json:"volumes,omitempty"`
 
-	// Docker image to use
-	Image string `json:"image,omitempty"`
+	// Resources specifies compute requirements
+	Resources *ResourceRequirements `json:"resources,omitempty"`
 
-	// Resource requirements
-	MemMB uint `json:"memoryMB,omitempty"`
-	NCpus uint `json:"cpus,omitempty"`
+	// Tags are arbitrary key-value metadata
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// ===== Runtime fields =====
 
 	// Dependencies on other processes (job names)
 	Dependencies []string `json:"-"`
@@ -235,12 +279,41 @@ func (pd *ProcessDesc) GetBasePath() string {
 
 // GetInputs implements the Step interface
 func (pd *ProcessDesc) GetInputs() map[string]string {
-	return pd.Inputs
+	// Convert Input array to map for compatibility
+	result := make(map[string]string)
+	for _, input := range pd.Inputs {
+		key := input.Name
+		if key == "" {
+			key = input.Path
+		}
+		result[key] = input.Path
+	}
+	return result
 }
 
 // GetProcess implements the Step interface
 func (pd *ProcessDesc) GetProcess() *ProcessDesc {
 	return pd
+}
+
+// ToTask converts ProcessDesc to Task format
+func (pd *ProcessDesc) ToTask() *Task {
+	task := &Task{
+		Name:        pd.Name,
+		Description: pd.Description,
+		Inputs:      pd.Inputs,
+		Outputs:     pd.Outputs,
+		Executors:   pd.Executors,
+		Tags:        pd.Tags,
+		Volumes:     pd.Volumes,
+	}
+
+	// Convert resources
+	if pd.Resources != nil {
+		task.Resources = pd.Resources.ToResources()
+	}
+
+	return task
 }
 
 // ============================================================================

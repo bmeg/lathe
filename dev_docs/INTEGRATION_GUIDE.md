@@ -20,9 +20,9 @@ The refactored Lathe engine consists of:
    - Parameter passing and dynamic workflow generation
 
 3. **API Functions** (`scriptfile/api.go`)
-   - Job/process declaration via `lathe.Process()`
-   - File declaration via `lathe.File()`
-   - Tool templates via `lathe.Tool()`
+   - Job/process declaration via `jflow.Process()`
+   - File declaration via `jflow.File()`
+   - Tool templates via `jflow.Tool()`
    - Callback registration via `onComplete()`
    - Plugin system for external integration
 
@@ -42,10 +42,10 @@ The refactored Lathe engine consists of:
 
 ```javascript
 // Declare a workflow
-const mainWorkflow = lathe.Workflow("main");
+const mainWorkflow = jflow.Workflow("main");
 
 // Create a job
-const job1 = lathe.Process({
+const job1 = jflow.Process({
   name: "hello_world",
   commandLine: "echo 'Hello, World!'",
   cpus: 1,
@@ -59,15 +59,15 @@ mainWorkflow.Add(job1);
 ### 2. File Input/Output Dependencies
 
 ```javascript
-const wf = lathe.Workflow("data_pipeline");
+const wf = jflow.Workflow("data_pipeline");
 
 // Define input file check
-wf.Add(lathe.FileCheck({
+wf.Add(jflow.FileCheck({
   file: { path: "data/input.txt" }
 }));
 
 // Job 1: Process input
-const processJob = lathe.Process({
+const processJob = jflow.Process({
   name: "process_data",
   commandLine: "cat data/input.txt | tr a-z A-Z > data/output.txt",
   inputs: { "raw": "data/input.txt" },
@@ -78,7 +78,7 @@ const processJob = lathe.Process({
 wf.Add(processJob);
 
 // Job 2: Validate output (auto-depends on processJob through file dependency)
-const validateJob = lathe.Process({
+const validateJob = jflow.Process({
   name: "validate",
   commandLine: "wc -l data/output.txt > data/stats.txt",
   inputs: { "data": "data/output.txt" },
@@ -92,10 +92,10 @@ wf.Add(validateJob);
 ### 3. Using Futures and Callbacks
 
 ```javascript
-const wf = lathe.Workflow("with_callbacks");
+const wf = jflow.Workflow("with_callbacks");
 
 // Create a job
-const myJob = lathe.Process({
+const myJob = jflow.Process({
   name: "important_task",
   commandLine: "./script.sh > results.json",
   outputs: { "results": "results.json" },
@@ -105,7 +105,7 @@ const myJob = lathe.Process({
 
 // Register callback for post-job analysis
 onComplete(myJob, function(result) {
-  lathe.println("Job finished: " + result.jobName);
+  println("Job finished: " + result.jobName);
   
   if (result.status.state === "completed") {
     lathe.println("Exit code: " + result.status.exitCode);
@@ -136,16 +136,16 @@ wf.Add(myJob);
 ### 4. Docker Container Execution
 
 ```javascript
-const wf = lathe.Workflow("containerized");
+const wf = jflow.Workflow("containerized");
 
 // Declare Docker image
-lathe.DockerImage("docker/bwa", "bwa:latest", "Dockerfile", {
+jflow.DockerImage("docker/bwa", "bwa:latest", "Dockerfile", {
   VERSION: "0.7.17",
   PREFIX: "/usr/local"
 });
 
 // Create job that runs in container
-const bwaJob = lathe.Process({
+const bwaJob = jflow.Process({
   name: "bwa_align",
   commandLine: "bwa mem -t 8 reference.fa reads.fq > output.sam",
   image: "bwa:latest",
@@ -166,16 +166,16 @@ wf.Add(bwaJob);
 ### 5. Parameterized Workflows
 
 ```javascript
-// Access user parameters via lathe.Params
-const referencePath = lathe.Params.reference || "default_ref.fa";
-const samplePath = lathe.Params.sample || "default_sample.fq";
-const threads = lathe.Params.threads || 4;
-const memory = lathe.Params.memory || 4096;
+// Access user parameters via jflow.Params
+const referencePath = jflow.Params.reference || "default_ref.fa";
+const samplePath = jflow.Params.sample || "default_sample.fq";
+const threads = jflow.Params.threads || 4;
+const memory = jflow.Params.memory || 4096;
 
-const wf = lathe.Workflow("parameterized");
+const wf = jflow.Workflow("parameterized");
 
 // Use parameters in job definitions
-const alignJob = lathe.Process({
+const alignJob = jflow.Process({
   name: "align",
   commandLine: `bwa mem -t ${threads} ${referencePath} ${samplePath} > output.sam`,
   cpus: threads,

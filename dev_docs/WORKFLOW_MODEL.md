@@ -1,10 +1,10 @@
-# Lathe Workflow Object Model - Schema Documentation
+# jflow Workflow Object Model - Schema Documentation
 
-This document describes the workflow object model used by Lathe to declare jobs, tools, files, and workflows via JavaScript.
+This document describes the **jflow** workflow object model - an open standard for declaring jobs, tools, files, and workflows via JavaScript. Lathe is one implementation of this standard.
 
 ## Overview
 
-The Lathe workflow engine is built around the concept of:
+The jflow standard is built around the concept of:
 - **Files**: Data artifacts that can be inputs or outputs
 - **Tools**: Reusable command templates with resource requirements
 - **Jobs (Processes)**: Individual task executions with dependencies
@@ -12,24 +12,24 @@ The Lathe workflow engine is built around the concept of:
 - **Futures**: Deferred results that resolve upon task completion
 - **Callbacks**: Post-job analysis functions
 
-All workflow declarations are made in JavaScript, which can call global functions provided by the `lathe` object to build the workflow model.
+All workflow declarations are made in JavaScript, which can call global functions provided by the `jflow` object to build the workflow model.
 
 ## Global API
 
-### `lathe.Workflow(name: string): WorkflowDesc`
+### `jflow.Workflow(name: string): WorkflowDesc`
 
 Creates a new named workflow. Returns a workflow object that can have steps added to it.
 
 ```javascript
-const mainWorkflow = lathe.Workflow("main");
+const mainWorkflow = jflow.Workflow("main");
 ```
 
-### `lathe.Process(spec: ProcessSpec): ProcessDesc`
+### `jflow.Process(spec: ProcessSpec): ProcessDesc`
 
 Creates a job (process) that will be executed as part of the workflow. The spec object contains the job definition.
 
 ```javascript
-const job1 = lathe.Process({
+const job1 = jflow.Process({
   name: "align_reads",
   commandLine: "bwa mem ref.fa input.fq > output.sam",
   image: "bwa:latest",
@@ -46,28 +46,28 @@ const job1 = lathe.Process({
 mainWorkflow.Add(job1);
 ```
 
-### `lathe.File(spec: FileSpec): File`
+### `jflow.File(spec: FileSpec): File`
 
 Creates a reference to a file (input/output data).
 
 ```javascript
-const inputFile = lathe.File({
+const inputFile = jflow.File({
   type: "local",
   path: "data/input.txt"
 });
 
-const s3File = lathe.File({
+const s3File = jflow.File({
   type: "s3",
   path: "s3://bucket/data/file.txt"
 });
 ```
 
-### `lathe.FileCheck(spec: FileCheckSpec): FileCheck`
+### `jflow.FileCheck(spec: FileCheckSpec): FileCheck`
 
 Creates a file existence check step, which ensures a file exists before dependent jobs run.
 
 ```javascript
-const checkInput = lathe.FileCheck({
+const checkInput = jflow.FileCheck({
   file: {
     type: "local",
     path: "data/input.txt"
@@ -76,12 +76,12 @@ const checkInput = lathe.FileCheck({
 mainWorkflow.Add(checkInput);
 ```
 
-### `lathe.Tool(spec: ToolSpec): ToolCommand`
+### `jflow.Tool(spec: ToolSpec): ToolCommand`
 
 Creates a reusable tool/command template that can be instantiated multiple times.
 
 ```javascript
-const bwaTool = lathe.Tool({
+const bwaTool = jflow.Tool({
   name: "bwa_align",
   commandLine: "bwa mem {{ref}} {{reads}} > {{output}}",
   image: "bwa:latest",
@@ -102,40 +102,40 @@ const bwaTool = lathe.Tool({
 });
 ```
 
-### `lathe.DockerImage(baseDir: string, tag: string, dockerfile?: string, buildArgs?: object): void`
+### `jflow.DockerImage(baseDir: string, tag: string, dockerfile?: string, buildArgs?: object): void`
 
 Declares a Docker image specification. The image will be built before it's used.
 
 ```javascript
-lathe.DockerImage("docker/bwa", "bwa:latest", "Dockerfile", {
+jflow.DockerImage("docker/bwa", "bwa:latest", "Dockerfile", {
   VERSION: "0.7.17"
 });
 ```
 
-### `lathe.LoadPlan(path: string): object`
+### `jflow.LoadPlan(path: string): object`
 
 Loads and executes a sub-workflow from an external JavaScript file. Returns a map of workflow names.
 
 ```javascript
-const subWorkflows = lathe.LoadPlan("subworkflows/preprocessing.js");
+const subWorkflows = jflow.LoadPlan("subworkflows/preprocessing.js");
 mainWorkflow.Add(subWorkflows.alignReads);
 ```
 
-### `lathe.Plugin(command: string): any`
+### `jflow.Plugin(command: string): any`
 
 Executes an external command and returns its JSON output. Useful for dynamic workflow generation.
 
 ```javascript
-const config = lathe.Plugin("get_config --format json");
+const config = jflow.Plugin("get_config --format json");
 ```
 
-### `lathe.Params: object`
+### `jflow.Params: object`
 
 User parameters passed to the workflow. Can be used for dynamic configuration.
 
 ```javascript
-const mode = lathe.Params.mode || "production";
-const threads = lathe.Params.threads || 4;
+const mode = jflow.Params.mode || "production";
+const threads = jflow.Params.threads || 4;
 ```
 
 ## Type Specifications
@@ -226,26 +226,26 @@ interface ResourceSpec {
 ### Adding Steps to a Workflow
 
 ```javascript
-const wf = lathe.Workflow("myworkflow");
+const wf = jflow.Workflow("myworkflow");
 
 // Add a process
-const job1 = lathe.Process({ /* ... */ });
+const job1 = jflow.Process({ /* ... */ });
 wf.Add(job1);
 
 // Add a file check
-const check = lathe.FileCheck({ /* ... */ });
+const check = jflow.FileCheck({ /* ... */ });
 wf.Add(check);
 
 // Add another job (automatically creates dependency on previous job through shared files)
-const job2 = lathe.Process({
+const job2 = jflow.Process({
   name: "process2",
   inputs: { "data": "output.sam" }  // Depends on job1's output
 });
 wf.Add(job2);
 
 // Add a sub-workflow
-const sub = lathe.Workflow("sub");
-const subJob = lathe.Process({ /* ... */ });
+const sub = jflow.Workflow("sub");
+const subJob = jflow.Process({ /* ... */ });
 sub.Add(subJob);
 wf.Add(sub);  // Inlines sub-workflow steps
 ```
@@ -264,7 +264,7 @@ Dependencies are automatically resolved based on:
 Every job returns a Future that will resolve when the job completes:
 
 ```javascript
-const job = lathe.Process({
+const job = jflow.Process({
   name: "my_job",
   commandLine: "echo hello > output.txt",
   outputs: { "message": "output.txt" }
@@ -279,7 +279,7 @@ const jobFuture = job.GetFuture();
 Callbacks are functions executed after a job completes:
 
 ```javascript
-const job = lathe.Process({
+const job = jflow.Process({
   name: "process_data",
   commandLine: "./process.sh",
   outputs: { "result": "result.json" }
@@ -287,11 +287,11 @@ const job = lathe.Process({
 
 // Register a callback (JavaScript function)
 onComplete(job, function(result) {
-  lathe.println("Job completed: " + result.jobName);
-  lathe.println("Exit code: " + result.status.exitCode);
+  println("Job completed: " + result.jobName);
+  println("Exit code: " + result.status.exitCode);
   
   if (result.status.state === "completed" && result.status.exitCode === 0) {
-    lathe.println("Success!");
+    println("Success!");
     // Can trigger additional workflows or analysis
   }
 });
@@ -324,23 +324,23 @@ interface JobStatus {
 
 ```javascript
 // Declare workflow
-const mainWf = lathe.Workflow("genomics_pipeline");
+const mainWf = jflow.Workflow("genomics_pipeline");
 
 // Define input parameters
-const refGenome = lathe.Params.reference || "hg38.fa";
-const sampleFile = lathe.Params.sample || "sample.fq";
+const refGenome = jflow.Params.reference || "hg38.fa";
+const sampleFile = jflow.Params.sample || "sample.fq";
 
 // Check that inputs exist
-mainWf.Add(lathe.FileCheck({
+mainWf.Add(jflow.FileCheck({
   file: { path: refGenome }
 }));
 
-mainWf.Add(lathe.FileCheck({
+mainWf.Add(jflow.FileCheck({
   file: { path: sampleFile }
 }));
 
 // Job 1: Index reference
-const indexJob = lathe.Process({
+const indexJob = jflow.Process({
   name: "index_reference",
   commandLine: "bwa index " + refGenome,
   image: "bwa:latest",
@@ -350,7 +350,7 @@ const indexJob = lathe.Process({
 mainWf.Add(indexJob);
 
 // Job 2: Align reads
-const alignJob = lathe.Process({
+const alignJob = jflow.Process({
   name: "align_reads",
   commandLine: "bwa mem " + refGenome + " " + sampleFile + " > aligned.sam",
   image: "bwa:latest",
@@ -369,14 +369,14 @@ mainWf.Add(alignJob);
 // Register callback for alignment job
 onComplete(alignJob, function(result) {
   if (result.status.exitCode === 0) {
-    lathe.println("Alignment successful!");
+    println("Alignment successful!");
   } else {
-    lathe.println("Alignment failed!");
+    println("Alignment failed!");
   }
 });
 
 // Job 3: Convert SAM to BAM
-const convertJob = lathe.Process({
+const convertJob = jflow.Process({
   name: "convert_to_bam",
   commandLine: "samtools view -b -o aligned.bam aligned.sam",
   image: "samtools:latest",
@@ -404,16 +404,16 @@ lathe run workflow.js
 lathe run workflow.js --params mode=test --params threads=8
 ```
 
-Parameters are accessible in the script as `lathe.Params`:
+Parameters are accessible in the script as `jflow.Params`:
 
 ```javascript
-const threads = lathe.Params.threads || 4;
-const mode = lathe.Params.mode || "production";
+const threads = jflow.Params.threads || 4;
+const mode = jflow.Params.mode || "production";
 ```
 
 ## Job Runners
 
-Lathe supports multiple job runners:
+jflow implementations (like Lathe) can support multiple job runners:
 
 1. **Local Runner**: Executes jobs via `os.exec` on the local machine
    - Suitable for testing and single-machine deployments
@@ -424,12 +424,12 @@ Lathe supports multiple job runners:
    - Compatible with cloud providers (Google Cloud, AWS, Azure)
    - Supports containerized execution
 
-Both runners are selected at execution time and receive the same workflow model.
+Both runners are selected at execution time and receive the same jflow workflow model.
 
 ## Notes and Best Practices
 
 1. **Naming**: Always provide meaningful names to jobs for easier debugging
-2. **Dependencies**: Let Lathe resolve dependencies through file inputs/outputs when possible
+2. **Dependencies**: Let the jflow engine resolve dependencies through file inputs/outputs when possible
 3. **Resources**: Specify accurate resource requirements for better scheduling
 4. **Callbacks**: Use callbacks for post-job validation and dynamic workflows
 5. **Modularity**: Use LoadPlan to organize large workflows into sub-workflows

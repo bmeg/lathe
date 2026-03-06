@@ -85,17 +85,18 @@ docs/
 
 ### 2. JavaScript Environment (`scriptfile/js_vm.go`)
 
-**Purpose**: Initialize Goja runtime and set up global API
+**Purpose**: Initialize Goja runtime and set up jflow standard API
 
 **Key Functions**:
 - `RunFile(path)`: Parse and execute workflow script
 - `RunFileWithParams(path, params)`: Pass parameters to script
-- `setupVM()`: Configure global API
+- `setupVM()`: Configure global jflow API
 
 **Design Decisions**:
 - Separate `RunFile` and `RunFileWithParams` for clarity
-- Global `lathe` object namespaces all API functions
-- Parameters passed as `lathe.Params` map
+- Global `jflow` object namespaces all API functions (jflow standard)
+- Backward compatibility with `lathe` namespace
+- Parameters passed as `jflow.Params` map
 - Easy to add new global functions
 
 ### 3. API Functions (`scriptfile/api.go`)
@@ -151,7 +152,7 @@ docs/
 
 **Execution Flow**:
 ```
-1. JavaScript calls lathe.Process({...})
+1. JavaScript calls jflow.Process({...})
    → Creates ProcessDesc
    → Initializes Future[*JobResult]
    → Returns immediately
@@ -179,7 +180,7 @@ JavaScript Script
     ↓
 Goja Runtime (vm.RunScript)
     ↓
-API Function Calls (lathe.Process, lathe.Workflow, etc.)
+API Function Calls (jflow.Process, jflow.Workflow, etc.)
     ↓
 Plan Object (Workflows + Images + Parameters)
     ↓
